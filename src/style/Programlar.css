@@ -1,0 +1,42 @@
+.programlarCard{
+    margin-top: 12px;
+    color: white;
+    text-align: center;
+    box-shadow: 0 0 20px 5px rgba(0, 0, 0, .6);
+}
+
+.programlarCard .cardImage{
+    border-top-left-radius: 24px;
+    border-top-right-radius: 24px;
+    width: 100%;
+}
+
+.programlarCard .cardTitle{
+    font-size: 32px;
+    font-family: "Century Gothic";
+    color: #e6ffff;
+}
+
+.cardButtonGroup{
+    margin-top: 20px;
+}
+
+.cardButtonGroup .cardButtons{
+    font-size: 24px;
+}
+
+input[type="checkbox"]{
+    width: 30px;
+    height: 30px;
+    border-radius: 64px;
+}
+
+.checkboxLabel{
+    font-size: 24px;
+    margin-right: 10px;
+}
+
+.submitButton{
+    width: 100%;
+    
+}

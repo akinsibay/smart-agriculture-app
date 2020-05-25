@@ -1,0 +1,17 @@
+.servisTable tbody{
+    font-size: 28px;
+    border:none;
+}
+
+.servisTable tbody tr{
+    border:none;
+}
+
+
+.servisTable{
+    margin-top: 25px;
+    border-radius: 24px;
+    border:none
+}
+
+

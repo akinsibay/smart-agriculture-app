@@ -1,0 +1,26 @@
+.buttonCol{
+    margin-top: 25px;
+}
+
+.calismaTable tbody{
+    font-size:28px;
+    font-family: "Century Gothic"
+}
+
+.calismaTable .badges{
+    font-size: 30px;
+    float:right;
+}
+
+
+.calismaTable{
+    border-radius: 24px;
+    box-shadow: 0 0 20px 5px rgba(0, 0, 0, .6);
+}
+
+.calismaTable thead th{
+    font-size: 32px;
+    text-align: center;
+    border:none;
+    color:#feca57;
+}
