@@ -236,7 +236,7 @@ export default class Programlar extends Component {
       suankiGunler,
     } = this.state.cardInfo;
     return (
-      <div className="bgColor">
+      <div>
         {/* CARDS */}
         
         <Container fluid={true}>

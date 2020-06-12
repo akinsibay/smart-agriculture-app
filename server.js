@@ -2,6 +2,7 @@ let express = require("express");
 let bodyParser = require("body-parser");
 let morgan = require("morgan");
 let pg = require("pg");
+var {islemler} = require('./programRun')
 const PORT = 3001;
 
 let pool = new pg.Pool({
@@ -36,7 +37,7 @@ app.get("/programListele", function (req, res) {
       console.log(err)
       return res.status(400).send(err);
     } else {
-      db.query('SELECT * FROM public."Programlar"', function (err, table) {
+      db.query('SELECT * FROM public."Programlar" ORDER BY "id" ASC', function (err, table) {
         done();
         if (err) {
           return res.status(400).send(err);
@@ -209,7 +210,7 @@ app.post('/aktifProgramEkle',function(req,res){
   let kayitZamani = now.toLocaleString();
   console.log(req.body)
   let {id,programAdi,baslamaTarih,baslamaSaat,calismaSuresiSaat,calismaSuresiDakika,calismaSuresiSaniye,beklemeSuresiSaat,beklemeSuresiDakika,beklemeSuresiSaniye,tekrar,phSet,ecSet,Valfler,Gunler} = req.body
- 
+  
 
   pool.connect((err, db, done) => {
     if (err) {
@@ -232,6 +233,15 @@ app.post('/aktifProgramEkle',function(req,res){
       );
     }
   });
+
+  let _calismaSuresi = calismaSuresiSaat*3600 + calismaSuresiDakika*60 + calismaSuresiSaniye //sn cinsinden
+  let _beklemeSuresi = beklemeSuresiSaat*3600 + beklemeSuresiDakika*60 + beklemeSuresiSaniye //sn cinsinden
+  let _tekrar = tekrar;
+  let _gunler = Gunler;
+  let _baslamaZamani = baslamaSaat
+  let bilgiler = {id,programAdi,_calismaSuresi,_beklemeSuresi,_tekrar,_gunler,_baslamaZamani}
+  console.log(islemler.basla(bilgiler))
+  
 })
 
 app.post('/aktifProgramKaldir',function(req,res){
@@ -252,6 +262,7 @@ app.post('/aktifProgramKaldir',function(req,res){
       });
     }
   });
+  islemler.durdur(req.body);
 })
 
 app.get("/aktifProgramListele", function (req, res) {
