@@ -31,9 +31,9 @@ let islemler = {
   },
 
   basla: function (kart) {
-    aktifKartlar.push(kart.id)
+    aktifKartlar.push(kart.id || kart.programID)
     console.log(aktifKartlar)
-    console.log(kart.id)
+    console.log(kart.id || kart.programID)
     this.kontrolTime(kart)    
   },
 
@@ -44,27 +44,27 @@ let islemler = {
         let suankiGun = d.getDay();
         
         if (kart._gunler.gun.find(gun=>gun===day[suankiGun])) {
-            console.log("gün uyumlu kart id:",kart.id);
+            console.log("gün uyumlu kart id:",kart.id || kart.programID);
         
             if (suankiSaat === kart._baslamaZamani) {
-                console.log("basladi kart id:",kart.id);
+                console.log("basladi kart id:",kart.id || kart.programID );
                 aktifProgramId=kart.id
                 this.calis(kart,this.bekle);
                 clearInterval(timer)
             } else {
-                console.log("saat gelmedi kart id:",kart.id);
+                console.log("saat gelmedi kart id:",kart.id || kart.programID);
             }
         } 
         else {
-            console.log("gün uyumsuz kart id:",kart.id);
+            console.log("gün uyumsuz kart id:",kart.id || kart.programID);
         } 
         
         }, 2000);
   },
   durdur: function(kart){      
-      console.log('silinmek icin gonderilen:',kart.id)
+      console.log('silinmek icin gonderilen:',kart.id || kart.programID)
       console.log('once:',aktifKartlar)
-      if(aktifKartlar.find(item=>kart.id === item)){   
+      if(aktifKartlar.find(item=>kart.id || kart.programID === item)){   
         clearInterval(timer) //zamanın gelmesini bekleyen timer
         console.log('interval durdu')
         clearTimeout(calisTimer) //zaman gelmiş program çalışmaya başlamış, çalışma timerı
@@ -72,7 +72,7 @@ let islemler = {
         clearTimeout(bekleTimer) //zaman gelmiş program çalışmaya başlamış,bekleme timerı
         console.log('bekleme timerı durdu')
       }
-      aktifKartlar = aktifKartlar.filter(item=>item!==kart.id)
+      aktifKartlar = aktifKartlar.filter(item=>item!==kart.id || kart.programID)
       console.log('sonra:',aktifKartlar)
       i=0;
   },

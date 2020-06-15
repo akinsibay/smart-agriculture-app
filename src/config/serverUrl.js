@@ -1,3 +1,4 @@
-const serverUrl = 'http://127.0.0.1:3001'
-
+var ip = require('ip')
+let pcIP = ip.address()
+const serverUrl = 'http://'+pcIP+':3001'
 export default serverUrl

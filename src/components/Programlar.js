@@ -84,7 +84,13 @@ export default class Programlar extends Component {
     }});
   };
 
-  editModalOpen = () => this.setState({ editModalOpen: true });
+  editModalOpen = () => {
+    let title="PROGRAM DÜZENLEME"
+    let message='Bu programı düzenlemek istiyorsunuz. Eğer program aktifse ayarların geçerli olabilmesi için programı pasife alıp tekrar aktif etmeniz gerekir.'  
+    alertify.confirm(title, message, 
+                    ()=>this.setState({ editModalOpen: true }),
+                    ()=>alertify.error('İşlem iptal edildi'))
+  };
   editModalClose = () => this.setState({ editModalOpen: false });
   addModalOpen = () => this.setState({ addModalOpen: true });
   addModalClose = () => this.setState({ addModalOpen: false });
@@ -236,7 +242,7 @@ export default class Programlar extends Component {
       suankiGunler,
     } = this.state.cardInfo;
     return (
-      <div>
+      <div className="bgImage">
         {/* CARDS */}
         
         <Container fluid={true}>

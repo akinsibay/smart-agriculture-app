@@ -1,7 +1,6 @@
 import React, { Component } from "react";
-import { Container, Row, Col, Table, Form, FormGroup, Input } from "reactstrap";
+import { Container, Row, Col, Table } from "reactstrap";
 import { CircularProgressbar, buildStyles } from "react-circular-progressbar";
-import { Modal, Message } from "semantic-ui-react";
 import "../style/SahaIzleme.css";
 import "../style/Genel.css";
 
@@ -74,73 +73,6 @@ export default class SahaIzleme extends Component {
     ],
   };
 
-  propModalOpen = () => this.setState({ propModalOpen: true });
-  propModalClose = () => this.setState({ propModalOpen: false });
-
-  propEkleModal = () => {
-    return (
-      <Modal
-        size="tiny"
-        open={this.state.propModalOpen}
-        onClose={this.propModalClose}
-        style={{
-          top: "auto",
-          left: "auto",
-          right: "auto",
-          bottom: "auto",
-          height: "400px",
-        }}
-      >
-        <Modal.Header>Prop Ekleme Ekranı</Modal.Header>
-        <Modal.Content scrolling>
-          <Message
-            icon="warning circle"
-            size="large"
-            warning
-            attached
-            content="Prop bilgilerini giriniz."
-          />
-          <Container>
-            <Row>
-              <Col>
-                <Form className="modalForm">
-                  <FormGroup>
-                    <Input
-                      style={{ fontSize: "20px", marginTop: "25px" }}
-                      name="sahaAdi"
-                      value=""
-                      id="exampleEmail"
-                      placeholder="Prop Adı"
-                      onChange={this.editHandleChange}
-                      required
-                    />
-                    <Input
-                      style={{ fontSize: "20px", marginTop: "10px" }}
-                      name="propAdi"
-                      value=""
-                      id="exampleEmail"
-                      placeholder="Prop Parametresi"
-                      onChange={this.editHandleChange}
-                      required
-                    />
-                    <Input
-                      style={{ fontSize: "20px", marginTop: "10px" }}
-                      type="submit"
-                      value="Ekle"
-                    />
-                  </FormGroup>
-                </Form>
-              </Col>
-            </Row>
-          </Container>
-        </Modal.Content>
-      </Modal>
-    );
-  };
-
-  propEkleButon = () => {
-    this.propModalOpen();
-  };
 
   render() {
     return (
@@ -197,7 +129,6 @@ export default class SahaIzleme extends Component {
             ))}
           </Row>
         </Container>
-        {this.propEkleModal()}
       </div>
     );
   }

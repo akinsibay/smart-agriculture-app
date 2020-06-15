@@ -64,7 +64,7 @@ export default class Navi extends Component {
           </Menu.Item>
 
           <Menu.Item className="decoration" style={{float:'right'}}>
-          APRA
+          APRA Mühendislik
           </Menu.Item>
         </Menu>
       </div>

@@ -2,9 +2,8 @@ let express = require("express");
 let bodyParser = require("body-parser");
 let morgan = require("morgan");
 let pg = require("pg");
-var {islemler} = require('./programRun')
+var {islemler} = require('./programRunTest')
 const PORT = 3001;
-
 let pool = new pg.Pool({
   port: 5432,
   password: "159753",
@@ -142,7 +141,7 @@ app.post("/programSil",function(req,res){
 })
 
 app.post("/programGuncelle",function(req,res){
-    console.log(req.body)
+    //console.log(req.body)
     let {id,programAdi,baslamaTarih,baslamaSaat,calismaSuresiSaat,calismaSuresiDakika,calismaSuresiSaniye,beklemeSuresiSaat,beklemeSuresiDakika,beklemeSuresiSaniye,tekrar,phSet,ecSet,valf1,valf2,valf3,valf4,valf5,valf6,valf7,valf8,pazartesi,sali,carsamba,persembe,cuma,cumartesi,pazar} = req.body
   //VALFLER  
   let valfArray=[]
@@ -208,7 +207,7 @@ app.post("/programGuncelle",function(req,res){
 app.post('/aktifProgramEkle',function(req,res){
   let now = new Date()
   let kayitZamani = now.toLocaleString();
-  console.log(req.body)
+  //console.log(req.body)
   let {id,programAdi,baslamaTarih,baslamaSaat,calismaSuresiSaat,calismaSuresiDakika,calismaSuresiSaniye,beklemeSuresiSaat,beklemeSuresiDakika,beklemeSuresiSaniye,tekrar,phSet,ecSet,Valfler,Gunler} = req.body
   
 
@@ -240,20 +239,20 @@ app.post('/aktifProgramEkle',function(req,res){
   let _gunler = Gunler;
   let _baslamaZamani = baslamaSaat
   let bilgiler = {id,programAdi,_calismaSuresi,_beklemeSuresi,_tekrar,_gunler,_baslamaZamani}
-  console.log(islemler.basla(bilgiler))
+  islemler.basla(bilgiler)
   
 })
 
 app.post('/aktifProgramKaldir',function(req,res){
   pool.connect((err, db, done) => {
     if (err) {
-      return res.status(400).send(err);
+      return res.status(400).send('selamlar');
     } else {
-      db.query('DELETE FROM public."AktifProgramlar" WHERE "programID"=$1',[req.body.id], function (err) {
+      db.query('DELETE FROM public."AktifProgramlar" WHERE "programID"=$1',[req.body.id || req.body.programID], function (err) {
         done();
         if (err) {
           console.log(err)
-          return res.status(400).send(err);
+          return res.status(404).send({message:"sql sorgusu"})
         } else {
           console.log("CARD PASSIVE: "+req.body.programAdi)
           //db.end()
@@ -271,7 +270,7 @@ app.get("/aktifProgramListele", function (req, res) {
       console.log(err)
       return res.status(400).send(err);
     } else {
-      db.query('SELECT * FROM public."AktifProgramlar"', function (err, table) {
+      db.query('SELECT * FROM public."AktifProgramlar" ORDER BY "programID" ASC', function (err, table) {
         done();
         if (err) {
           return res.status(400).send(err);

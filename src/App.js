@@ -6,7 +6,6 @@ import SahaIzleme from "./components/SahaIzleme";
 import CalismaEkrani from "./components/CalismaEkrani";
 import Ayarlar from "./components/Ayarlar";
 import Navi from "./components/Navi";
-import Footer from "./components/Footer";
 import Servis from "./components/Servis";
 import Main from "./components/Main";
 import test from "./components/test"
@@ -95,52 +94,64 @@ export default class App extends Component {
     let that = this;
     let url = serverUrl + '/aktifProgramEkle'
        
-    let willAdd = {
-      programID : item.id,
-      programAdi : item.programAdi,
-      baslamaTarih: item.baslamaTarih,
-      baslamaSaat: item.baslamaSaat,
-      beklemeSuresiDakika: item.beklemeSuresiDakika,
-      beklemeSuresiSaat : item.beklemeSuresiSaat,
-      beklemeSuresiSaniye: item.beklemeSuresiSaniye,
-      calismaSuresiDakika:item.calismaSuresiDakika,
-      calismaSuresiSaat:item.calismaSuresiSaat,
-      calismaSuresiSaniye:item.calismaSuresiSaniye,
-      ecSet:item.ecSet,
-      phSet:item.phSet,
-      tekrar:item.tekrar,
-      Valfler:item.Valfler,
-      Gunler:item.Gunler
-    }  
-    let tempArray = this.state.activeCards;
-    if (!tempArray.find((itm) => itm.programID === item.id)) {       
-        tempArray.push(willAdd);      
+    // let willAdd = {
+    //   programID : item.id,
+    //   programAdi : item.programAdi,
+    //   baslamaTarih: item.baslamaTarih,
+    //   baslamaSaat: item.baslamaSaat,
+    //   beklemeSuresiDakika: item.beklemeSuresiDakika,
+    //   beklemeSuresiSaat : item.beklemeSuresiSaat,
+    //   beklemeSuresiSaniye: item.beklemeSuresiSaniye,
+    //   calismaSuresiDakika:item.calismaSuresiDakika,
+    //   calismaSuresiSaat:item.calismaSuresiSaat,
+    //   calismaSuresiSaniye:item.calismaSuresiSaniye,
+    //   ecSet:item.ecSet,
+    //   phSet:item.phSet,
+    //   tekrar:item.tekrar,
+    //   Valfler:item.Valfler,
+    //   Gunler:item.Gunler
+    // }  
+    // let tempArray = this.state.activeCards;
+    if (!this.state.activeCards.find((itm) => itm.programID === item.id)) {       
+        //tempArray.push(willAdd);      
         axios.post(url,item)
           .then(function(res){
-            that.setState({ activeCards:tempArray }); 
+            //that.setState({ activeCards:tempArray }); 
             that.notification(item,' aktif edildi.','success')
+            setTimeout(() => {
+              window.location.reload() 
+            }, 500); 
           })
           .catch(function(error){
             alert(error)
             that.notification('','Veritabanı hatası!','error')
           })
-    }    
+    }
+         
   };
 
   passiveButton = (item) => {
-    let activeCards = [...this.state.activeCards];
-    activeCards = activeCards.filter((card) => card.programID !== item.id);
-    this.setState({ activeCards }); 
-   
+    // let activeCards = [...this.state.activeCards];
+    // activeCards = activeCards.filter((card) => card.programID !== item.id);
+    // this.setState({ activeCards });
+    let that = this; 
+    console.log(item)
     let url = serverUrl + '/aktifProgramKaldir'
     axios.post(url,item)
       .then(function(res){
         console.log(res)
+        that.notification(item,' pasif edildi.','error')
+        setTimeout(() => {
+          window.location.reload() 
+        }, 500);
       })
       .catch(function(error){
-        alert(error)
-      })
-    this.notification(item,' pasif edildi.','error')
+        //alert(error)
+        console.log(error)
+        that.notification('',String(error),'error')
+      })    
+   
+     
   };
 
 
@@ -208,6 +219,7 @@ export default class App extends Component {
               activeCards={activeCards}
               cards={array}
               sahaVerileri={sahaVerileri}
+              passiveButton={this.passiveButton}            
             ></CalismaEkrani>
           </Route>
 
@@ -233,7 +245,12 @@ export default class App extends Component {
             <SahaIzleme sahaVerileri={sahaVerileri}/>
           </Route>
 
-          <Route exact path="/servis" component={Servis} />
+          <Route exact path="/servis">
+              <Servis 
+                activeCards={activeCards} 
+                cards={array} 
+                passiveButton={this.passiveButton}/>
+          </Route>
 
           <Route exact path="/ayarlar" component={Ayarlar} />
 
@@ -241,7 +258,7 @@ export default class App extends Component {
 
           <Route exact path="/test" component={test} />
         </Switch>
-        <Footer/>
+        
       </div>
     );
   }

@@ -9,55 +9,64 @@ import {ic_schedule} from 'react-icons-kit/md/ic_schedule'
 import {ic_invert_colors} from 'react-icons-kit/md/ic_invert_colors'
 import {starFull} from 'react-icons-kit/icomoon/starFull'
 import {steam} from 'react-icons-kit/icomoon/steam'
-import {pause} from 'react-icons-kit/icomoon/pause'
-import {stop} from 'react-icons-kit/icomoon/stop'
 import {cancelCircle} from 'react-icons-kit/icomoon/cancelCircle'
 import { CircularProgressbar, buildStyles } from "react-circular-progressbar";
 import { Container, Row, Col, Badge, Button, Table,Progress } from "reactstrap";
 import Thermometer from 'react-thermometer-ecotropy'
 import ReactSpeedometer from "react-d3-speedometer"
-
+import alertify from 'alertifyjs'
 export default class CalismaEkrani extends Component {
   badgeJSX = (item) => {
     return (
-      <Badge
+      <div>
+       <Badge
         className="badges"
         key={item.id}
         color="success"
       >
-        {item.programAdi}
+      {item.programAdi}       
       </Badge>
+      
+      </div>        
     );
   };
 
   duraklat = () => {
     alert("duraklatıldı");
   };
-  bitir = () => {
-    alert("bitirildi");
+  passiveProgram = (item) => {
+    let title="PROGRAM PASİF ETME"
+    let message=item.programAdi+' programını pasifleştiriyorsunuz.Program çalışıyorsa duracak.Emin misiniz?'
+    
+    alertify.confirm(title, message, 
+                    ()=>this.props.passiveButton(item),
+                    ()=>alertify.error('İşlem iptal edildi'))
   };
   acildurus = () => {
     alert("acil durduruldu");
-  };
+  }; 
+  
   render() {
     const { sicaklik, nem, ph, ec, debi } = this.props.sahaVerileri;
     return (
       <div className="bgColor">
         <Container fluid={true}>
+        <Button color="danger" className="acilStop" onClick={this.acildurus}><Icon size={28} icon={cancelCircle}/> Acil Duruş</Button>
           <Row>
-            <Col xs={12} lg={9} md={9} style={{ marginTop: "20px" }}>
+            <Col xs={12} lg={9} md={9} style={{ marginTop: "10px" }}>
               <Table dark className="sulamaProgrami">
                 <thead>
                   <tr>
-                    <th colSpan="4">SULAMA PROGRAMI</th>
+                    <th colSpan="5">SULAMA PROGRAMI</th>
                   </tr>
                 </thead>
                 <tbody>
-                  <tr className="sulamaProgramiUst">
-                    <th><Icon size={32} icon={starFull}/> Aktif Program</th>
-                    <th><Icon size={32} icon={ic_schedule}/> Sulama Süresi</th>
-                    <th><Icon size={32} icon={ic_schedule}/> Kalan Süre</th>
-                    <th><Icon size={32} icon={steam}/> Valf</th>
+                  <tr className="sulamaProgramiUst">                 
+                          <th style={{width:'25%'}}><Icon size={32} icon={starFull}/> Aktif Program</th>
+                          <th style={{width:'25%'}}><Icon size={32} icon={ic_schedule}/> Sulama Süresi</th>
+                          <th style={{width:'20%'}}><Icon size={32} icon={ic_schedule}/> Kalan Süre</th>
+                          <th style={{width:'25%'}}><Icon size={32} icon={steam}/> Valf</th>
+                          <th style={{width:'5%'}}></th>                                
                   </tr>
                   <tr>
                     <td>
@@ -66,16 +75,21 @@ export default class CalismaEkrani extends Component {
                           ? this.badgeJSX(item)
                           : ""
                       )}
-                      {this.props.activeCards.length === 0 ? (<Badge className="badges" color="danger" >Seçili Program Yok</Badge>) : ""}
+                      {this.props.activeCards.length === 0 ? (<Badge className="badges" color="warning" >Seçili Program Yok</Badge>) : ""}
                     </td>
                     <td>
-                    {this.props.activeCards.length === 0 ? "" : this.props.activeCards.map(item=><Badge color="info" className="badges">{item.calismaSuresiSaat+' sa '+item.calismaSuresiDakika+' dk '+item.calismaSuresiSaniye+' sn'}</Badge>)}
+                    {this.props.activeCards.length === 0 ? "" : this.props.activeCards.map(item=><Badge key={item.programID} color="info" className="badges">{item.calismaSuresiSaat+' sa '+item.calismaSuresiDakika+' dk '+item.calismaSuresiSaniye+' sn'}</Badge>)}
                     </td>
                     <td>
-                    {this.props.activeCards.length === 0 ? "" : this.props.activeCards.map(item=><Badge color="info" className="badges">..</Badge>)}  
+                    {this.props.activeCards.length === 0 ? "" : this.props.activeCards.map(item=><Badge key={item.programID} color="info" className="badges">..</Badge>)}  
                     </td>
                     <td>
-                      {this.props.activeCards.length === 0 ? "" : this.props.activeCards.map(item=><Badge color="info" className="badges">{item.Valfler.valf+' '}</Badge>)}
+                      {this.props.activeCards.length === 0 ? "" : this.props.activeCards.map(item=><Badge key={item.programID} color="info" className="badges">{item.Valfler.valf+' '}</Badge>)}
+                    </td>
+                    <td>
+                      {this.props.activeCards.length === 0 ? "" : this.props.activeCards.map(item=>
+                      <Badge key={item.programID} className="badges" style={{cursor:'pointer'}} onClick={()=>this.passiveProgram(item)}color="danger">X</Badge>)                                                                 
+                      }
                     </td>
                   </tr>
 
@@ -101,7 +115,7 @@ export default class CalismaEkrani extends Component {
               </Table>
             </Col>
 
-            <Col xs={12} lg={3} md={3} style={{ marginTop: "20px" }}>
+            <Col xs={12} lg={3} md={3} style={{ marginTop: "10px" }}>
             <Table dark className="suHazirlama">
                 <thead>
                   <tr>
@@ -182,7 +196,7 @@ export default class CalismaEkrani extends Component {
           </Row>
 
           <Row>
-            <Col xs={12} lg={10} md={10} style={{ marginTop: "5px" }}>
+            <Col xs={12} md={12} lg={12} style={{ marginTop: "5px" }}>
             <Table dark className="sahaVerileri">
                 <thead>
                   <tr>
@@ -191,14 +205,14 @@ export default class CalismaEkrani extends Component {
                 </thead>
                 <tbody>
                   <tr className="sahaVerileriUst">
-                    <th><Icon size={32} icon={sun}/> Debi</th>
-                    <th><Icon size={32} icon={ic_invert_colors}/> Nem</th>
-                    <th><Icon size={32} icon={fire}/> Sıcaklık</th>
-                    <th><Icon size={32} icon={lab}/> PH</th>
-                    <th><Icon size={32} icon={lab}/> EC</th>
+                    <th style={{width:'%24'}}><Icon size={32} icon={sun}/> Debi</th>
+                    <th style={{width:'%24'}}><Icon size={32} icon={ic_invert_colors}/> Nem</th>
+                    <th style={{width:'%4'}}><Icon size={32} icon={fire}/> Isı</th>
+                    <th style={{width:'%24'}}><Icon size={32} icon={lab}/> PH</th>
+                    <th style={{width:'%24'}}><Icon size={32} icon={lab}/> EC</th>
                   </tr>
                   <tr>
-                    <td style={{width:'250px',height:'100px'}}>
+                      <td style={{width:'20%'}}>
                       <ReactSpeedometer
                             fluidWidth={true}
                             value={debi}
@@ -213,7 +227,8 @@ export default class CalismaEkrani extends Component {
                             valueTextFontSize={'28px'}
                       />                                            
                     </td>
-                    <td style={{width:'250px',height:'100px'}}>
+                    
+                    <td style={{width:'20%'}}>
                       <ReactSpeedometer
                             fluidWidth={true}
                             value={nem}
@@ -228,7 +243,7 @@ export default class CalismaEkrani extends Component {
                             valueTextFontSize={'28px'}
                       />                                            
                     </td>
-                    <td>
+                    <td style={{width:'4%'}}>
                       {" "}
                       <Thermometer
                         theme="dark"
@@ -236,10 +251,10 @@ export default class CalismaEkrani extends Component {
                         max="50"
                         format="°C"
                         size="normal"
-                        height="150"
+                        // height="150"
                       />
                     </td>
-                    <td style={{width:'250px',height:'100px'}}>
+                    <td style={{width:'20%'}}>
                       <ReactSpeedometer
                             fluidWidth={true}
                             value={ph}
@@ -254,7 +269,7 @@ export default class CalismaEkrani extends Component {
                             valueTextFontSize={'28px'}
                           />                             
                     </td>
-                    <td style={{width:'250px',height:'100px'}}>                     
+                    <td style={{width:'20%'}}>                     
                         <ReactSpeedometer
                           fluidWidth={true}
                           value={ec}
@@ -272,35 +287,7 @@ export default class CalismaEkrani extends Component {
                   </tr>
                 </tbody>
               </Table>
-            </Col>
-
-            <Col>
-            <Button
-                color="warning"
-                style={{ fontSize: "32px", width: "100%",marginTop:'25px',boxShadow: "0 0 20px 5px rgba(0, 0, 0, .6)",textAlign:'left',borderRadius:'12px'}}
-                onClick={this.duraklat}
-              >
-              <Icon size={32} icon={pause}/>
-                {' '} Duraklat
-              </Button>
-              <Button               
-                style={{ fontSize: "32px", width: "100%",marginTop:'15px',boxShadow: "0 0 20px 5px rgba(0, 0, 0, .6)",textAlign:'left',borderRadius:'12px'}}
-                onClick={this.bitir}
-              >
-                <Icon size={32} icon={stop}/>
-                {' '}
-                Bitir
-              </Button>
-              <Button
-                color="danger"
-                style={{ fontSize: "32px",width: "100%",marginTop:'15px',boxShadow: "0 0 20px 5px rgba(0, 0, 0, .6)",textAlign:'left',borderRadius:'12px'}}
-                onClick={this.acildurus}
-              >
-                <Icon size={32} icon={cancelCircle}/>
-                {' '}
-                Acil Duruş
-              </Button>
-            </Col>                    
+            </Col>                   
           </Row>
         </Container>       
       </div>
