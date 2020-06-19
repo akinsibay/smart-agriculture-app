@@ -84,13 +84,7 @@ export default class Programlar extends Component {
     }});
   };
 
-  editModalOpen = () => {
-    let title="PROGRAM DÜZENLEME"
-    let message='Bu programı düzenlemek istiyorsunuz. Eğer program aktifse ayarların geçerli olabilmesi için programı pasife alıp tekrar aktif etmeniz gerekir.'  
-    alertify.confirm(title, message, 
-                    ()=>this.setState({ editModalOpen: true }),
-                    ()=>alertify.error('İşlem iptal edildi'))
-  };
+  editModalOpen = () => this.setState({ editModalOpen: true });
   editModalClose = () => this.setState({ editModalOpen: false });
   addModalOpen = () => this.setState({ addModalOpen: true });
   addModalClose = () => this.setState({ addModalOpen: false });
@@ -273,7 +267,7 @@ export default class Programlar extends Component {
                       (itm) => item.id === itm.programID
                     )
                       ? "1"
-                      : "0.6",
+                      : "0.7",
                     backgroundColor: this.props.activeCards.find(
                       (itm) => item.id === itm.programID
                     )
@@ -310,6 +304,7 @@ export default class Programlar extends Component {
                         Pasif
                       </Button>
                       <Button
+                        disabled={this.props.activeCards.find((itm)=>item.id === itm.programID) ? true : false}
                         key={item.id}
                         className="cardButtons"
                         color="warning"
@@ -548,33 +543,33 @@ export default class Programlar extends Component {
                       <FormGroup row>
                       <Label for="valf" style={{ fontSize: "24px" }} xs={5}>
                         Valf 
-                      <p>{suankiValfler.map(item=>(<Badge color="info" style={{marginRight:'3px'}}>{item}</Badge>))}</p>
+                      <p><Badge>{'Önceki Seçim->'}</Badge>{suankiValfler.length===0 ? <Badge color="warning">SEÇİM YOK</Badge> : suankiValfler.map(item=>(<Badge color="info" style={{marginRight:'2px'}}>{item}</Badge>))}</p>
                         </Label>
                         <Col xs={7}>
-                        <input name="valf1" type="checkbox" onClick={this.onChangeSwitch} defaultChecked={suankiValfler.find(item=> item==="valf1") && true}/><Label className="checkboxLabel">Valf-1</Label>
-                        <input name="valf2" type="checkbox" onClick={this.onChangeSwitch} defaultChecked={suankiValfler.find(item=> item==="valf2") && true}/><Label className="checkboxLabel">Valf-2</Label>
-                        <input name="valf3" type="checkbox" onClick={this.onChangeSwitch} defaultChecked={suankiValfler.find(item=> item==="valf3") && true}/><Label className="checkboxLabel">Valf-3</Label>
-                        <input name="valf4" type="checkbox" onClick={this.onChangeSwitch} defaultChecked={suankiValfler.find(item=> item==="valf4") && true}/><Label className="checkboxLabel">Valf-4</Label>
-                        <input name="valf5" type="checkbox" onClick={this.onChangeSwitch} defaultChecked={suankiValfler.find(item=> item==="valf5") && true}/><Label className="checkboxLabel">Valf-5</Label>
-                        <input name="valf6" type="checkbox" onClick={this.onChangeSwitch} defaultChecked={suankiValfler.find(item=> item==="valf6") && true}/><Label className="checkboxLabel">Valf-6</Label>
-                        <input name="valf7" type="checkbox" onClick={this.onChangeSwitch} defaultChecked={suankiValfler.find(item=> item==="valf7") && true}/><Label className="checkboxLabel">Valf-7</Label>
-                        <input name="valf8" type="checkbox" onClick={this.onChangeSwitch} defaultChecked={suankiValfler.find(item=> item==="valf8") && true}/><Label className="checkboxLabel">Valf-8</Label>
+                        <input name="valf1" type="checkbox" onClick={this.onChangeSwitch} onChangeCapture={this.onChangeSwitch} /*defaultChecked={suankiValfler.find(item=> item==="valf1") && true}*//><Label className="checkboxLabel">Valf-1</Label>
+                        <input name="valf2" type="checkbox" onClick={this.onChangeSwitch} onChangeCapture={this.onChangeSwitch} /*defaultChecked={suankiValfler.find(item=> item==="valf2") && true}*//><Label className="checkboxLabel">Valf-2</Label>
+                        <input name="valf3" type="checkbox" onClick={this.onChangeSwitch} onChangeCapture={this.onChangeSwitch} /*defaultChecked={suankiValfler.find(item=> item==="valf3") && true}*//><Label className="checkboxLabel">Valf-3</Label>
+                        <input name="valf4" type="checkbox" onClick={this.onChangeSwitch} onChangeCapture={this.onChangeSwitch} /*defaultChecked={suankiValfler.find(item=> item==="valf4") && true}*//><Label className="checkboxLabel">Valf-4</Label>
+                        <input name="valf5" type="checkbox" onClick={this.onChangeSwitch} onChangeCapture={this.onChangeSwitch} /*defaultChecked={suankiValfler.find(item=> item==="valf5") && true}*//><Label className="checkboxLabel">Valf-5</Label>
+                        <input name="valf6" type="checkbox" onClick={this.onChangeSwitch} onChangeCapture={this.onChangeSwitch} /*defaultChecked={suankiValfler.find(item=> item==="valf6") && true}*//><Label className="checkboxLabel">Valf-6</Label>
+                        <input name="valf7" type="checkbox" onClick={this.onChangeSwitch} onChangeCapture={this.onChangeSwitch} /*defaultChecked={suankiValfler.find(item=> item==="valf7") && true}*//><Label className="checkboxLabel">Valf-7</Label>
+                        <input name="valf8" type="checkbox" onClick={this.onChangeSwitch} onChangeCapture={this.onChangeSwitch} /*defaultChecked={suankiValfler.find(item=> item==="valf8") && true}*//><Label className="checkboxLabel">Valf-8</Label>
                         </Col>
                     </FormGroup>
                       
                     <FormGroup row>
                       <Label for="günler" style={{fontSize:"24px"}} xs={5}>
                       Günler 
-                      <p>{suankiGunler.map(item=>(<Badge color="info" style={{marginRight:'3px'}}>{item}</Badge>))}</p>
+                      <p><Badge>{'Önceki Seçim->'}</Badge>{suankiGunler.length===0 ? <Badge color="warning">SEÇİM YOK</Badge> : suankiGunler.map(item=>(<Badge color="info" style={{marginRight:'2px'}}>{item}</Badge>))}</p>
                       </Label>
                       <Col xs={7}>
-                        <input name="pazartesi" type="checkbox" onClick={this.onChangeSwitch} defaultChecked={suankiGunler.find(item=> item==="pazartesi") && true}/><Label className="checkboxLabel">Pazartesi</Label>
-                        <input name="sali" type="checkbox" onClick={this.onChangeSwitch} defaultChecked={suankiGunler.find(item=> item==="sali") && true}/><Label className="checkboxLabel">Salı</Label>
-                        <input name="carsamba" type="checkbox" onClick={this.onChangeSwitch} defaultChecked={suankiGunler.find(item=> item==="carsamba") && true}/><Label className="checkboxLabel">Çarşamba</Label>
-                        <input name="persembe" type="checkbox" onClick={this.onChangeSwitch} defaultChecked={suankiGunler.find(item=> item==="persembe") && true}/><Label className="checkboxLabel">Perşembe</Label>
-                        <input name="cuma" type="checkbox" onClick={this.onChangeSwitch} defaultChecked={suankiGunler.find(item=> item==="cuma") && true}/><Label className="checkboxLabel">Cuma</Label>
-                        <input name="cumartesi" type="checkbox" onClick={this.onChangeSwitch} defaultChecked={suankiGunler.find(item=> item==="cumartesi") && true}/><Label className="checkboxLabel">Cumartesi</Label>
-                        <input name="pazar" type="checkbox" onClick={this.onChangeSwitch} defaultChecked={suankiGunler.find(item=> item==="pazar") && true}/><Label className="checkboxLabel">Pazar</Label>
+                        <input name="pazartesi" type="checkbox" onClick={this.onChangeSwitch} /*defaultChecked={suankiGunler.find(item=> item==="pazartesi") && true}*//><Label className="checkboxLabel">Pazartesi</Label>
+                        <input name="sali" type="checkbox" onClick={this.onChangeSwitch} /*defaultChecked={suankiGunler.find(item=> item==="sali") && true}*//><Label className="checkboxLabel">Salı</Label>
+                        <input name="carsamba" type="checkbox" onClick={this.onChangeSwitch} /*defaultChecked={suankiGunler.find(item=> item==="carsamba") && true}*//><Label className="checkboxLabel">Çarşamba</Label>
+                        <input name="persembe" type="checkbox" onClick={this.onChangeSwitch} /*defaultChecked={suankiGunler.find(item=> item==="persembe") && true}*//><Label className="checkboxLabel">Perşembe</Label>
+                        <input name="cuma" type="checkbox" onClick={this.onChangeSwitch} /*defaultChecked={suankiGunler.find(item=> item==="cuma") && true}*//><Label className="checkboxLabel">Cuma</Label>
+                        <input name="cumartesi" type="checkbox" onClick={this.onChangeSwitch} /*defaultChecked={suankiGunler.find(item=> item==="cumartesi") && true}*//><Label className="checkboxLabel">Cumartesi</Label>
+                        <input name="pazar" type="checkbox" onClick={this.onChangeSwitch} /*defaultChecked={suankiGunler.find(item=> item==="pazar") && true}*//><Label className="checkboxLabel">Pazar</Label>
                       </Col>                    
                     </FormGroup>
                     

@@ -2,7 +2,7 @@ let express = require("express");
 let bodyParser = require("body-parser");
 let morgan = require("morgan");
 let pg = require("pg");
-var {islemler} = require('./programRunTest')
+var {islemler} = require('./programRun')
 const PORT = 3001;
 let pool = new pg.Pool({
   port: 5432,
@@ -237,8 +237,11 @@ app.post('/aktifProgramEkle',function(req,res){
   let _beklemeSuresi = beklemeSuresiSaat*3600 + beklemeSuresiDakika*60 + beklemeSuresiSaniye //sn cinsinden
   let _tekrar = tekrar;
   let _gunler = Gunler;
-  let _baslamaZamani = baslamaSaat
-  let bilgiler = {id,programAdi,_calismaSuresi,_beklemeSuresi,_tekrar,_gunler,_baslamaZamani}
+  let _baslamaZamani = baslamaSaat;
+  let _phSet = phSet;
+  let _ecSet = ecSet;
+  let _valfler = Valfler;
+  let bilgiler = {id,programAdi,_calismaSuresi,_beklemeSuresi,_tekrar,_gunler,_baslamaZamani,_phSet,_ecSet,_valfler}
   islemler.basla(bilgiler)
   
 })
@@ -246,7 +249,7 @@ app.post('/aktifProgramEkle',function(req,res){
 app.post('/aktifProgramKaldir',function(req,res){
   pool.connect((err, db, done) => {
     if (err) {
-      return res.status(400).send('selamlar');
+      return res.status(400).send(err);
     } else {
       db.query('DELETE FROM public."AktifProgramlar" WHERE "programID"=$1',[req.body.id || req.body.programID], function (err) {
         done();
