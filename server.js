@@ -286,5 +286,24 @@ app.get("/aktifProgramListele", function (req, res) {
     }
   });
 });
+app.get("/calisanProgramListele", function (req, res) {
+  pool.connect((err, db, done) => {
+    if (err) {
+      console.log(err)
+      return res.status(400).send(err);
+    } else {
+      db.query('SELECT * FROM public."CalisanProgramlar"', function (err, table) {
+        done();
+        if (err) {
+          return res.status(400).send(err);
+        } else {
+          //db.end()
+          return res.status(200).send(table.rows);
+          
+        }
+      });
+    }
+  });
+});
 
 app.listen(PORT, () => console.log("Listening on port " + PORT));

@@ -9,7 +9,7 @@ function run(kart){
         setTimeout(() => {
             console.log('PLC connection OK')
             let valfler = kart._valfler.valf; //valfler arrayini oluştur
-            plcRun(valfler)   //xuniyi bu valf bilgileriyle sür 
+            plcRun(valfler)   //plcyi bu valf bilgileriyle sür 
         }, 1000);
         
     })             
@@ -18,7 +18,7 @@ function run(kart){
 }
 function stop(){
     return 0
-    //buraya xuni digital outputları 0 yapacak modbus kodu yazılacak
+    //buraya plc digital outputları 0 yapacak modbus kodu yazılacak
 }
 
 function plcRun(valfler){

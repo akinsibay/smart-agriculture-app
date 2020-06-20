@@ -13,7 +13,8 @@ import {
   FormGroup,
   Label,
   Input,
-  Badge
+  Badge,
+  Table
 } from "reactstrap";
 import { Modal, Message } from "semantic-ui-react";
 import { SettingOutlined } from "@ant-design/icons";
@@ -27,14 +28,13 @@ export default class Programlar extends Component {
     cardInfo:{
       id:"",
       programAdi: null,
-      baslamaTarih:null,
       baslamaSaat:null,
-      calismaSuresiSaat:null,
-      calismaSuresiDakika:null,
-      calismaSuresiSaniye:null,
-      beklemeSuresiSaat:null,
-      beklemeSuresiDakika:null,
-      beklemeSuresiSaniye:null,
+      calismaSuresiSaat:0,
+      calismaSuresiDakika:0,
+      calismaSuresiSaniye:0,
+      beklemeSuresiSaat:0,
+      beklemeSuresiDakika:0,
+      beklemeSuresiSaniye:0,
       tekrar:null,
       phSet:null,
       ecSet:null,
@@ -112,7 +112,6 @@ export default class Programlar extends Component {
     const {
       programAdi,
       baslamaSaat,
-      baslamaTarih,
       calismaSuresiSaat,
       calismaSuresiDakika,
       calismaSuresiSaniye,
@@ -129,7 +128,6 @@ export default class Programlar extends Component {
     let newObject = {
       id: this.props.card.length + 1,
       programAdi: programAdi,
-      baslamaTarih: baslamaTarih,
       baslamaSaat:  baslamaSaat,
       calismaSuresiSaat: calismaSuresiSaat,
       calismaSuresiDakika:  calismaSuresiDakika,
@@ -143,54 +141,29 @@ export default class Programlar extends Component {
       valf1,valf2,valf3,valf4,valf5,valf6,valf7,valf8,
       pazartesi,sali,carsamba,persembe,cuma,cumartesi,pazar
     };
-
-    let saat = this.state.cardInfo.baslamaSaat+':00'
-    let girilenZaman = baslamaTarih + ' ' + saat
-    
-    let d = new Date(girilenZaman);
-    let now = new Date();
-    if (d.getFullYear() < now.getFullYear()) {
-      this.props.notification('','Girdiğiniz tarih geçmiş. Kontrol ediniz.','error')
-    } 
-    else if (d.getFullYear() === now.getFullYear()) {
-      if (d.getMonth() < now.getMonth()) {
-        this.props.notification('','Girdiğiniz tarih geçmiş. Kontrol ediniz.','error')
-      } 
-      else if (d.getMonth() === now.getMonth()) {
-        if (d.getDate() < now.getDate()) {
-          this.props.notification('','Girdiğiniz tarih geçmiş. Kontrol ediniz.','error')
-        } 
-        else if (d.getDate() === now.getDate()) {
-          if (d.getHours() < now.getHours()) {
-            this.props.notification('','Girdiğiniz tarih geçmiş. Kontrol ediniz.','error')
-          } 
-          else if (d.getHours() === now.getHours()) {
-            if (d.getMinutes() < now.getMinutes()) {
-              this.props.notification('','Girdiğiniz tarih geçmiş. Kontrol ediniz.','error')
-            } 
-            else if (d.getMinutes() >= now.getMinutes()) {
-              this.props.addData(newObject);;
-            }
-          } 
-          else {
-            this.props.addData(newObject);
-          }
-        } 
-        else {
-          this.props.addData(newObject);
-        }
-      } 
-      else {
-        this.props.addData(newObject);;
-      }
-    } 
-    else {
-      this.props.addData(newObject);
+    if(!valf1 && !valf2 && !valf3 && !valf4 && !valf5 && !valf6 && !valf7 && !valf8){
+      this.props.notification('','Hiçbir valf seçmediniz!','error')
+    }
+    else if(!pazartesi && !sali && !carsamba && !persembe && !cuma && !cumartesi && !pazar){
+      this.props.notification('','Hiçbir gün seçmediniz!','error')
+    }
+    else{
+      this.props.addData(newObject); 
     }    
   };
 
   editProgram = ()=>{
-    this.props.editData(this.state.cardInfo)
+    const {valf1,valf2,valf3,valf4,valf5,valf6,valf7,valf8,pazartesi,sali,carsamba,persembe,cuma,cumartesi,pazar} = this.state.cardInfo; 
+  
+    if(!valf1 && !valf2 && !valf3 && !valf4 && !valf5 && !valf6 && !valf7 && !valf8){
+      this.props.notification('','Hiçbir valf seçmediniz!','error')
+    }
+    else if(!pazartesi && !sali && !carsamba && !persembe && !cuma && !cumartesi && !pazar){
+      this.props.notification('','Hiçbir gün seçmediniz!','error')
+    }
+    else{
+      this.props.editData(this.state.cardInfo)
+    }  
   }
 
   badgeJSX = (item) => {
@@ -199,9 +172,8 @@ export default class Programlar extends Component {
         key={item.id}
         color="success"
         style={{
-          fontSize: "28px",
+          fontSize: "22px",
           marginLeft: "5px",
-          marginTop: "15px",
           float: "right",
         }}
       >
@@ -218,10 +190,11 @@ export default class Programlar extends Component {
       [name]: value
     }});
   };
+  
+
   render() {
     const {
       programAdi,
-      baslamaTarih,
       baslamaSaat,
       calismaSuresiSaat,
       calismaSuresiDakika,
@@ -240,22 +213,30 @@ export default class Programlar extends Component {
         {/* CARDS */}
         
         <Container fluid={true}>
-          <Button
-            color="warning"
-            size="lg"
-            onClick={this.addProgramButton}
-            style={{ marginTop: "15px" }}
-          >
+          <Row>
+            <Col xs={12} lg={2} md={2}>
+              <Button
+              color="warning"
+              size="lg"
+              onClick={this.addProgramButton}
+              style={{ marginTop: "15px",width:'100%' }}
+            >
             <SettingOutlined style={{ fontSize: "24px" }} />
-            Yeni Program Ekle
-          </Button>
-          
-          {this.props.card.map((item) =>
-            this.props.activeCards.find((itm) => itm.programID === item.id)
-              ? this.badgeJSX(item)
-              : ""
-          )}
+             Yeni Program Ekle
+            </Button>
+            </Col>
 
+            <Col xs={12} lg={10} md={10}>
+            <Table dark className="calisanProgramTable">
+              <tbody>             
+                  <th>Çalışan Programlar</th>
+                    <td>
+                    {this.props.runningPrograms.length === 0 ? <Badge style={{fontSize:'22px',marginLeft:'5px',float:'right'}} color="warning" >Çalışan Program Yok</Badge> : this.props.runningPrograms.map(item=>this.badgeJSX(item))}
+                    </td>
+              </tbody>
+            </Table>  
+            </Col>
+          </Row>
           <Row>
             {this.props.card.map((item) => (            
               <Col xs={12} lg={3} md={6} key={item.id}>
@@ -385,17 +366,11 @@ export default class Programlar extends Component {
                         <Col xs={7}>
                           <input
                             style={{ fontSize: "20px" }}
-                            type="date"
-                            name="baslamaTarih"
-                            value={baslamaTarih}
-                            onChange={this.editHandleChange}
-                          />{' '}
-                          <input
-                            style={{ fontSize: "20px" }}
                             type="time"
                             name="baslamaSaat"
                             value={baslamaSaat}
                             onChange={this.editHandleChange}
+                            required
                           />
                         </Col>
                       </FormGroup>
@@ -643,17 +618,11 @@ export default class Programlar extends Component {
                         <Col xs={7}>
                           <input
                             style={{ fontSize: "20px" }}
-                            type="date"
-                            name="baslamaTarih"
-                            value={baslamaTarih}
-                            onChange={this.editHandleChange}
-                          />{' '}
-                          <input
-                            style={{ fontSize: "20px" }}
                             type="time"
                             name="baslamaSaat"
                             value={baslamaSaat}
                             onChange={this.editHandleChange}
+                            required
                           />
                         </Col>
                       </FormGroup>

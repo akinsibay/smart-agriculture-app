@@ -45,7 +45,7 @@ export default class Servis extends Component {
       },
     });
   };
-  badgeJSX = (item) => {
+  activeBadgeJSX = (item) => {
     return (
       <div>
        <Badge
@@ -54,9 +54,22 @@ export default class Servis extends Component {
         color="success"
       >
       {item.programAdi}       
-      </Badge>
-      
+      </Badge>    
       </div>        
+    );
+  };
+  runningBadgeJSX = (item) => {
+    return (
+      <Badge
+        key={item.id}
+        color="success"
+        style={{
+          fontSize: "28px",
+          marginLeft:'5px'
+        }}
+      >
+        {item.programAdi}
+      </Badge>       
     );
   };
 
@@ -103,7 +116,24 @@ export default class Servis extends Component {
 
   servisSayfa = () => {
     return (
-      <Container >
+      <div>
+      <Container fluid={true}>
+        <Row>
+        <Table dark className="calisanProgramTable">
+              <thead>
+                <tr>
+                  <th>Çalışan Programlar</th>
+                </tr>           
+              </thead>
+              <tbody>             
+                  <tr>
+                    <td>
+                    {this.props.runningPrograms.length === 0 ? <Badge style={{fontSize:'28px'}} color="warning" >Çalışan Program Yok</Badge> : this.props.runningPrograms.map(item=>this.runningBadgeJSX(item))}
+                    </td>
+                  </tr>
+              </tbody>
+            </Table>
+        </Row>
         <Row>
           <Col style={{marginTop:'15px'}}>
           <Table dark className="sulamaProgrami">
@@ -119,7 +149,7 @@ export default class Servis extends Component {
                     <td>
                       {this.props.cards.map((item) =>
                         this.props.activeCards.find((itm) => itm.programID === item.id)
-                          ? this.badgeJSX(item)
+                          ? this.activeBadgeJSX(item)
                           : ""
                       )}
                       {this.props.activeCards.length === 0 ? (<Badge className="badges" color="warning" >Seçili Program Yok</Badge>) : ""}
@@ -142,7 +172,11 @@ export default class Servis extends Component {
                 </tbody>
        </Table>
           </Col>        
-        </Row>      
+        </Row>  
+      </Container>
+      
+      
+      <Container>         
         <Row>
           <Col>         
             <Table dark className="servisTable">
@@ -174,6 +208,7 @@ export default class Servis extends Component {
           </Col>
         </Row>
       </Container>
+    </div>
     );
   };
   passiveProgram = (item) => {
@@ -187,59 +222,28 @@ export default class Servis extends Component {
   };
 
   valfOn(item){
-    let title="VALF ON/OFF"
-    let message='Aktif program var! Açtığınız valf programın çalışmasını etkileyebilir. İşlemi gerçekleştirmek istediğinize emin misiniz?'
-    if(this.props.activeCards.length > 0){
-      alertify.confirm(title, message, 
-        ()=>alert('Valf On '+item),
-        ()=>alertify.error('İşlem iptal edildi'))
-    }
-    else{
-      alert('Valf On '+item)
-    }
+    let message = 'Çalışan program var. Bu işlemi yapamazsınız. Program durduktan sonra yeniden deneyin.'
+    this.props.runningPrograms.length > 0 ? this.props.notification('',message,'error') : alert('Valf On '+item)
   }
   valfOff(item){
-    let title="VALF ON/OFF"
-    let message='Aktif program var! Kapattığınız valf programın çalışmasını etkileyebilir. İşlemi gerçekleştirmek istediğinize emin misiniz?'
-    if(this.props.activeCards.length > 0){
-      alertify.confirm(title, message, 
-        ()=>alert('Valf Off '+item),
-        ()=>alertify.error('İşlem iptal edildi'))
-    }
-    else{
-      alert('Valf Off '+item)
-    }
+    let message = 'Çalışan program var. Bu işlemi yapamazsınız. Program durduktan sonra yeniden deneyin.'
+    this.props.runningPrograms.length > 0 ? this.props.notification('',message,'error') : alert('Valf On '+item)
   }
   pompaOn(item){
-    let title="POMPA ON/OFF"
-    let message='Aktif program var! Açtığınız pompa programın çalışmasını etkileyebilir. İşlemi gerçekleştirmek istediğinize emin misiniz?'
-    if(this.props.activeCards.length > 0){
-      alertify.confirm(title, message, 
-        ()=>alert(item+' ON'),
-        ()=>alertify.error('İşlem iptal edildi'))
-    }
-    else{
-      alert(item+' ON')
-    }
+    let message = 'Çalışan program var. Bu işlemi yapamazsınız. Program durduktan sonra yeniden deneyin.'
+    this.props.runningPrograms.length > 0 ? this.props.notification('',message,'error') : alert('Valf On '+item)
   }
   pompaOff(item){
-    let title="POMPA ON/OFF"
-    let message='Aktif program var! Kapattığınız pompa programın çalışmasını etkileyebilir. İşlemi gerçekleştirmek istediğinize emin misiniz?'
-    if(this.props.activeCards.length > 0){
-      alertify.confirm(title, message, 
-        ()=>alert(item+' OFF'),
-        ()=>alertify.error('İşlem iptal edildi'))
-    }
-    else{
-      alert(item+' OFF')
-    }
+    let message = 'Çalışan program var. Bu işlemi yapamazsınız. Program durduktan sonra yeniden deneyin.'
+    this.props.runningPrograms.length > 0 ? this.props.notification('',message,'error') : alert('Valf On '+item)
   }
   render() {
     return (
       <div className="test">
-        {this.state.loginInfo.loginSuccess === true
+        {/* {this.state.loginInfo.loginSuccess === true
           ? this.servisSayfa()
-          : this.loginScreen()}
+          : this.loginScreen()} */}
+          {this.servisSayfa()}
       </div>
     );
   }

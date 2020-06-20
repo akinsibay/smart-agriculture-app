@@ -23,6 +23,7 @@ export default class App extends Component {
       debi: "",
       ruzgarhizi: "",
     },
+    runningPrograms:[]
   };
 
   addData = (gelen) => {
@@ -64,9 +65,9 @@ export default class App extends Component {
           item.ecSet=gelen.ecSet
         }
         return item;
-      })   
+      })
         that.setState({array:tempArray})
-        that.notification('','Program düzenlendi.','success')
+        that.notification(gelen,' programı düzenlendi','success')
       })
       .catch(function(error){
         console.log(error)
@@ -182,10 +183,25 @@ export default class App extends Component {
     axios.all([programListele(),aktifProgramListele()])
       .then(axios.spread((xRes,yRes)=>{
         that.setState({array:xRes.data,activeCards:yRes.data})
+        this.checkRunningPrograms()
       }))
       .catch((xError,yError)=>{
         that.notification('','Veritabanına bağlanılamadı!','error')
       })
+    
+    setInterval(() => {
+      this.checkRunningPrograms()
+    }, 5000);  
+  }
+
+  checkRunningPrograms=()=>{
+    let that = this;
+    let url = serverUrl + '/calisanProgramListele'
+    axios.get(url)
+    .then(res=>{
+      that.setState({runningPrograms:res.data})
+    })
+    .catch(err=>console.log(err))
   }
   
 
@@ -209,7 +225,7 @@ export default class App extends Component {
   }
 
   render() {
-    const { array, activeCards,sahaVerileri } = this.state;
+    const { array, activeCards,sahaVerileri,runningPrograms } = this.state;
     return (
       <div>
         <Navi/>
@@ -218,8 +234,9 @@ export default class App extends Component {
             <CalismaEkrani
               activeCards={activeCards}
               cards={array}
+              runningPrograms={runningPrograms} 
               sahaVerileri={sahaVerileri}
-              passiveButton={this.passiveButton}            
+              passiveButton={this.passiveButton}                        
             ></CalismaEkrani>
           </Route>
 
@@ -231,6 +248,7 @@ export default class App extends Component {
                 {...props}
                 card={array}
                 activeCards={activeCards}
+                runningPrograms={runningPrograms}
                 activeButton={this.activeButton}
                 passiveButton={this.passiveButton}
                 addData={this.addData}
@@ -247,9 +265,12 @@ export default class App extends Component {
 
           <Route exact path="/servis">
               <Servis 
-                activeCards={activeCards} 
+                activeCards={activeCards}
+                runningPrograms={runningPrograms} 
                 cards={array} 
-                passiveButton={this.passiveButton}/>
+                passiveButton={this.passiveButton}
+                notification = {this.notification}
+                />              
           </Route>
 
           <Route exact path="/ayarlar" component={Ayarlar} />

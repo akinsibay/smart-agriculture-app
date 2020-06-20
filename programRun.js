@@ -5,6 +5,17 @@ let calisTimers={} //çalışma intervaller objesi
 let bekleTimers={} //bekleme intervaller objesi
 let tekrarIndis={} //tekrar indisleri objesi (i)
 var modbus = require('./modbus')
+let pg = require("pg");
+
+let pool = new pg.Pool({
+  port: 5432,
+  password: "159753",
+  database: "postgres",
+  host: "localhost",
+  user: "postgres",
+});
+
+
 
 let islemler = {
   calis: function (kart, callback) {
@@ -30,6 +41,7 @@ let islemler = {
     }
     else{
       console.log(kart.programAdi+' program bitti!!')
+      dbdenSil(kart)
       timers['no'+id] = setInterval(() => {
         console.log(kart.programAdi+' tekrar sorgulanıyor...')
         tekrarIndis['no'+id] = 0;
@@ -71,6 +83,7 @@ let islemler = {
           if (suankiSaat === kart._baslamaZamani) {
               console.log("basladi kart id:",kart.id || kart.programID );
               this.calis(kart,this.bekle);
+              dbyeYaz(kart)
               clearInterval(timers['no'+id])
           } else {
               console.log("saat gelmedi kart id:",kart.id || kart.programID);
@@ -93,6 +106,7 @@ let islemler = {
         console.log('calisma timerı durdu')
         clearTimeout(bekleTimers['no'+id]) //zaman gelmiş program çalışmaya başlamış,bekleme timerı
         console.log('bekleme timerı durdu')
+        dbdenSil(kart)
       }
       modbus.stop()
       aktifKartlar = aktifKartlar.filter(item=>item!==kart.id || kart.programID)
@@ -100,5 +114,47 @@ let islemler = {
       tekrarIndis['no'+id] = 0;
   },
 };
+function dbyeYaz(kart){
+  let programAdi = kart.programAdi
+  pool.connect((err, db, done) => {
+    if (err) {
+      return console.log(err)
+    } else {
+      db.query(
+        'INSERT INTO public."CalisanProgramlar"("programAdi") VALUES ($1);',[programAdi],     
+        (err) => {
+          done()
+          if (err) {      
+            return console.log(err)
+          } else {
+            //db.end();
+            console.log('veritabanına yazıldı')
+          }
+        }
+      );
+    }
+  });
+}
+function dbdenSil(kart){
+  let programAdi = kart.programAdi
+  pool.connect((err, db, done) => {
+    if (err) {
+      return console.log(err)
+    } else {
+      db.query(
+        'DELETE FROM public."CalisanProgramlar" WHERE "programAdi"= $1;',[programAdi],     
+        (err) => {
+          done()
+          if (err) {      
+            return console.log(err)
+          } else {
+            //db.end();
+            console.log('veritabanından silindi')
+          }
+        }
+      );
+    }
+  });
+}
 
 module.exports = {islemler};
