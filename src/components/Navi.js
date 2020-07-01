@@ -3,7 +3,7 @@ import { Menu } from "antd";
 import {
   ExperimentOutlined,
   SettingOutlined,
-  AreaChartOutlined,
+  // AreaChartOutlined,
   DashboardOutlined,
   ControlOutlined
 } from "@ant-design/icons";
@@ -44,12 +44,12 @@ export default class Navi extends Component {
           
           <Menu.Item/>
 
-          <Menu.Item key="saha"  className="decoration">
+          {/* <Menu.Item key="saha"  className="decoration">
             <AreaChartOutlined style={{fontSize:'36px'}} />
             <Link to='/sahaizleme'>Saha İzleme</Link>
           </Menu.Item>
           
-          <Menu.Item/>  
+          <Menu.Item/>   */}
 
           <Menu.Item key="servis"  className="decoration">
            <ControlOutlined style={{fontSize:'36px'}}/>
@@ -64,7 +64,8 @@ export default class Navi extends Component {
           </Menu.Item>
 
           <Menu.Item className="decoration" style={{float:'right'}}>
-          APRA Mühendislik
+          {/* eslint-disable-next-line */}
+          <a href="https://www.apradanismanlik.com" target="_blank"  rel="noopener" >APRA Mühendislik</a>
           </Menu.Item>
         </Menu>
       </div>

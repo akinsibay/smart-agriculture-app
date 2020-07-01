@@ -1,5 +1,4 @@
 import React, { Component } from "react";
-import ReactSpeedometer from "react-d3-speedometer";
 import { Switch } from "antd";
 export default class test extends Component {
   state = {
@@ -28,32 +27,11 @@ export default class test extends Component {
   render() {
     return (
       <div style={{width:'500px', height:'200px'}}>
-        <ReactSpeedometer
-          fluidWidth={true}
-          value={4}
-          // segments={3}
-          customSegmentStops={[0, 2, 3, 4, 5]}
-          minValue={0}
-          maxValue={5}
-          needleColor="steelblue"
-          needleTransitionDuration={3000}
-          needleTransition="easeElastic"
-          textColor={"black"}
-        />
 
-        <ReactSpeedometer
-          value={4}
-          // segments={3}
-          customSegmentStops={[0, 2, 3, 4, 5]}
-          minValue={0}
-          maxValue={5}
-          needleColor="steelblue"
-          needleTransitionDuration={3000}
-          needleTransition="easeElastic"
-          textColor={"black"}
-        />
-         
+        <div style={{width:'100px',height:'50px'}}>
         <Switch onChange={this.onChangeSwitch}></Switch>
+        </div> 
+        
         <h3
           style={
             this.state.switchValue === true

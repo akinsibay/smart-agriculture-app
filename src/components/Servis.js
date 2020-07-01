@@ -14,6 +14,8 @@ import "../style/Login.css";
 import "../style/Genel.css";
 import { UserOutlined } from "@ant-design/icons";
 import alertify from 'alertifyjs'
+import axios from 'axios'
+import serverUrl from '../config/serverUrl'
 export default class Servis extends Component {
   state = {
     loginInfo: {
@@ -23,8 +25,9 @@ export default class Servis extends Component {
       sifre: "1234",
       loginSuccess: false,
     },
-    valfler:[1,2,3,4,5,6,7,8],
-    pompalar:['Pompa 1','Pompa 2','Pompa 3','EC Pompası','Asit Pompası']
+    valfler:[1,2,3],
+    pompalar:['Pompa 1','Pompa 2','Pompa 3','EC Pompası','Asit Pompası'],
+    onValfler:[]
   };
 
   login = () => {
@@ -33,6 +36,22 @@ export default class Servis extends Component {
     if (girilenID === ID && girilenSifre === sifre) {
       this.setState({ loginInfo: { loginSuccess: true } });
     }
+  };
+  onChangeSwitch = (checked,item) => {
+    //this.setState({ switchValue: checked });
+    console.log(item)
+    console.log(checked.name)
+    //console.log(valf)
+    console.log(`switch to ${checked}`)
+    if(checked===true){
+      console.log('true')
+      //this.valfOn(valf)
+    }
+    if(checked===false){
+      console.log('false')
+      //this.valfOff(valf)
+    }
+    console.log("eventte");
   };
 
   handleChange = (event) => {
@@ -58,17 +77,17 @@ export default class Servis extends Component {
       </div>        
     );
   };
-  runningBadgeJSX = (item) => {
+  runningBadgeJSX = (item,status) => {
     return (
       <Badge
         key={item.id}
-        color="success"
+        color={status === 1 ? "success" : "warning"}
         style={{
           fontSize: "28px",
           marginLeft:'5px'
         }}
       >
-        {item.programAdi}
+        {status === 1 ? item.programAdi : "Çalışan Program Yok"}
       </Badge>       
     );
   };
@@ -128,7 +147,7 @@ export default class Servis extends Component {
               <tbody>             
                   <tr>
                     <td>
-                    {this.props.runningPrograms.length === 0 ? <Badge style={{fontSize:'28px'}} color="warning" >Çalışan Program Yok</Badge> : this.props.runningPrograms.map(item=>this.runningBadgeJSX(item))}
+                    {this.props.runningPrograms.length === 0 ? this.runningBadgeJSX("",0) : this.props.runningPrograms.map(item=>this.runningBadgeJSX(item,1))}
                     </td>
                   </tr>
               </tbody>
@@ -161,7 +180,7 @@ export default class Servis extends Component {
                     {this.props.activeCards.length === 0 ? "" : this.props.activeCards.map(item=><Badge key={item.programID} color="info" className="badges">..</Badge>)}  
                     </td>
                     <td>
-                      {this.props.activeCards.length === 0 ? "" : this.props.activeCards.map(item=><Badge key={item.programID} color="info" className="badges">{item.Valfler.valf+' '}</Badge>)}
+                      {this.props.activeCards.length === 0 ? "" : this.props.activeCards.map(item=><Badge key={item.programID} color="info" className="badges">{/*item.Valfler.valf+' '*/'Valf 2'}</Badge>)}
                     </td>
                     <td>
                       {this.props.activeCards.length === 0 ? "" : this.props.activeCards.map(item=>
@@ -201,6 +220,8 @@ export default class Servis extends Component {
                     <td key={item}>{item}</td>
                     <td key={item}><Badge color="success" style={{cursor:'pointer'}} onClick={()=>this.valfOn(item)}>ON</Badge></td>
                     <td key={item}><Badge color="danger" style={{cursor:'pointer'}} onClick={()=>this.valfOff(item)}>OFF</Badge></td>
+                    <td key={item}><Badge color={this.state.onValfler.find(itm=>itm===item) ? "success" : "danger"}>{"    "}</Badge></td>
+                    
                   </tr>
                 )}
               </tbody>
@@ -222,12 +243,44 @@ export default class Servis extends Component {
   };
 
   valfOn(item){
+    let that = this;   
+    let url = serverUrl + '/manuelValfOn'
+    var valfObject = {'valf':item}    
     let message = 'Çalışan program var. Bu işlemi yapamazsınız. Program durduktan sonra yeniden deneyin.'
-    this.props.runningPrograms.length > 0 ? this.props.notification('',message,'error') : alert('Valf On '+item)
+    if(this.props.runningPrograms.length > 0){
+      this.props.notification('',message,'error')
+    }
+    else{
+      axios.post(url,valfObject)
+          .then(function(res){
+            let tempArray = that.state.onValfler   
+            tempArray.push(item)
+            that.setState({onValfler:tempArray})
+          })
+          .catch(function(error){
+            that.props.notification('','Modbus bağlantı hatası','error')
+          })
+    }
   }
   valfOff(item){
+    let that = this;   
+    let url = serverUrl + '/manuelValfOff'
+    var valfObject = {'valf':item} 
     let message = 'Çalışan program var. Bu işlemi yapamazsınız. Program durduktan sonra yeniden deneyin.'
-    this.props.runningPrograms.length > 0 ? this.props.notification('',message,'error') : alert('Valf On '+item)
+    if(this.props.runningPrograms.length > 0){
+      this.props.notification('',message,'error')
+    }
+    else{
+      axios.post(url,valfObject)
+          .then(function(res){
+            let tempArray = that.state.onValfler
+            tempArray = tempArray.filter(itm=>itm !== item)
+            that.setState({onValfler:tempArray})
+          })
+          .catch(function(error){
+            that.props.notification('','Modbus bağlantı hatası','error')
+          })
+    }
   }
   pompaOn(item){
     let message = 'Çalışan program var. Bu işlemi yapamazsınız. Program durduktan sonra yeniden deneyin.'
@@ -237,9 +290,13 @@ export default class Servis extends Component {
     let message = 'Çalışan program var. Bu işlemi yapamazsınız. Program durduktan sonra yeniden deneyin.'
     this.props.runningPrograms.length > 0 ? this.props.notification('',message,'error') : alert('Valf On '+item)
   }
+  componentDidMount() {
+    document.title = "APRA TARIM - Servis"
+  }
+  
   render() {
     return (
-      <div className="test">
+      <div className="bgImage">
         {/* {this.state.loginInfo.loginSuccess === true
           ? this.servisSayfa()
           : this.loginScreen()} */}

@@ -2,7 +2,7 @@ import React, { Component } from "react";
 import Programlar from "./components/Programlar";
 import { Route, Switch } from "react-router-dom";
 import cogoToast from "cogo-toast";
-import SahaIzleme from "./components/SahaIzleme";
+//import SahaIzleme from "./components/SahaIzleme";
 import CalismaEkrani from "./components/CalismaEkrani";
 import Ayarlar from "./components/Ayarlar";
 import Navi from "./components/Navi";
@@ -23,7 +23,8 @@ export default class App extends Component {
       debi: "",
       ruzgarhizi: "",
     },
-    runningPrograms:[]
+    runningPrograms:[],
+    programKalanSure:0
   };
 
   addData = (gelen) => {
@@ -124,8 +125,7 @@ export default class App extends Component {
             }, 500); 
           })
           .catch(function(error){
-            alert(error)
-            that.notification('','Veritabanı hatası!','error')
+            that.notification('',String(error),'error')
           })
     }
          
@@ -138,42 +138,50 @@ export default class App extends Component {
     let that = this; 
     console.log(item)
     let url = serverUrl + '/aktifProgramKaldir'
-    axios.post(url,item)
+      axios.post(url,item)
       .then(function(res){
-        console.log(res)
         that.notification(item,' pasif edildi.','error')
         setTimeout(() => {
           window.location.reload() 
         }, 500);
       })
       .catch(function(error){
-        //alert(error)
-        console.log(error)
         that.notification('',String(error),'error')
-      })    
-   
-     
+      }) 
   };
-
-
-  componentWillMount() {
+  
+  randomVeriUret = ()=>{
     setInterval(() => {
       this.setState({sahaVerileri:{
-        sicaklik: (15 + Math.random() * 15).toFixed(1),
-        nem: (20 + Math.random() * 80).toFixed(1),
+        //sicaklik: (15 + Math.random() * 15).toFixed(1),
+        //nem: (20 + Math.random() * 80).toFixed(1),
         ph: (Math.random() * 14).toFixed(1),
         ec: (Math.random() * 5).toFixed(1),
-        debi: (Math.random() * 5).toFixed(1),
-        ruzgarhizi: (Math.random() * 5).toFixed(1),
+        //debi: (Math.random() * 5).toFixed(1),
+        //ruzgarhizi: (Math.random() * 5).toFixed(1),
       }});
     }, 3000);
   }
-  
+  kalanSureHesapla = ()=>{
+    var interval = setInterval(() => {
+      if(this.state.programKalanSure > 0){
+        console.log('burdayım')
+        this.setState({programKalanSure:this.state.programKalanSure-1})
+      }
+      else if(this.state.programKalanSure === 0){
+        clearInterval(interval)
+      }
+      
+    }, 1000);   
+  }
   componentDidMount(){
     let that = this;
     let xurl = serverUrl + '/programListele'
     let yurl = serverUrl + '/aktifProgramListele'
 
+    this.randomVeriUret()
+    //this.kalanSureHesapla()
+    
     function programListele(){
       return axios.get(xurl)
     }
@@ -189,22 +197,29 @@ export default class App extends Component {
         that.notification('','Veritabanına bağlanılamadı!','error')
       })
     
-    setInterval(() => {
+    var interval = setInterval(() => {
       this.checkRunningPrograms()
+      
+      // if(this.state.runningPrograms.length>0){       
+      //    clearInterval(interval)        
+      // }    
     }, 5000);  
   }
 
   checkRunningPrograms=()=>{
+    const {runningPrograms} = this.state;
+    if(runningPrograms.length>0){
+      var sure = (Number(runningPrograms[0].calismaSuresiSaniye) + Number(runningPrograms[0].beklemeSuresiSaniye))*runningPrograms[0].tekrar
+    }  
     let that = this;
     let url = serverUrl + '/calisanProgramListele'
     axios.get(url)
     .then(res=>{
-      that.setState({runningPrograms:res.data})
+      that.setState({runningPrograms:res.data,programKalanSure:sure})
     })
     .catch(err=>console.log(err))
   }
   
-
   notification=(item,message,type)=>{
     if(type==='success'){
       cogoToast.success(
@@ -225,7 +240,7 @@ export default class App extends Component {
   }
 
   render() {
-    const { array, activeCards,sahaVerileri,runningPrograms } = this.state;
+    const { array, activeCards,sahaVerileri,runningPrograms,programKalanSure } = this.state;
     return (
       <div>
         <Navi/>
@@ -234,7 +249,8 @@ export default class App extends Component {
             <CalismaEkrani
               activeCards={activeCards}
               cards={array}
-              runningPrograms={runningPrograms} 
+              runningPrograms={runningPrograms}
+              programKalanSure ={programKalanSure} 
               sahaVerileri={sahaVerileri}
               passiveButton={this.passiveButton}                        
             ></CalismaEkrani>
@@ -259,9 +275,9 @@ export default class App extends Component {
             )}
           />
 
-          <Route exact path="/sahaizleme">
+          {/* <Route exact path="/sahaizleme">
             <SahaIzleme sahaVerileri={sahaVerileri}/>
-          </Route>
+          </Route> */}
 
           <Route exact path="/servis">
               <Servis 

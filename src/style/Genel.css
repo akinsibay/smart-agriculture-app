@@ -4,21 +4,18 @@
     background-position: center;
     background-repeat: no-repeat;
     background-size: cover;
+    overflow: auto;
+
 }
 
-.bgImage2 {
-    background-image: url("../assets/abstract.jpg");
-    height: 100vh;
-    background-position: center;
-    background-repeat: no-repeat;
-    background-size: cover;
-}
 .bgColor{
     background-image: linear-gradient(120deg,#3498db,#0abde3);
     height: 100%;
+    overflow: auto;
 }
 
 .test{
     background-color: #2e86de;   
     height: 100vh;
+    overflow: auto;
 }

@@ -2,13 +2,21 @@ let express = require("express");
 let bodyParser = require("body-parser");
 let morgan = require("morgan");
 let pg = require("pg");
-var {islemler} = require('./programRun')
+let ip = require('ip')
+let pcIP = ip.address()
+var suHazirlama = require('./suHazirlama')
+var ModbusRTU = require("modbus-serial");
+var client = new ModbusRTU();
+client.setTimeout(1000);
+const deviceIP = require("./src/config/deviceIP");
 const PORT = 3001;
+
+
 let pool = new pg.Pool({
   port: 5432,
   password: "159753",
   database: "postgres",
-  host: "localhost",
+  host: pcIP,
   user: "postgres",
 });
 
@@ -242,7 +250,9 @@ app.post('/aktifProgramEkle',function(req,res){
   let _ecSet = ecSet;
   let _valfler = Valfler;
   let bilgiler = {id,programAdi,_calismaSuresi,_beklemeSuresi,_tekrar,_gunler,_baslamaZamani,_phSet,_ecSet,_valfler}
-  islemler.basla(bilgiler)
+  //islemler.basla(bilgiler)
+  suHazirlama.run(bilgiler)
+
   
 })
 
@@ -264,7 +274,8 @@ app.post('/aktifProgramKaldir',function(req,res){
       });
     }
   });
-  islemler.durdur(req.body);
+  //islemler.durdur(req.body);
+  suHazirlama.stop(req.body)
 })
 
 app.get("/aktifProgramListele", function (req, res) {
@@ -286,6 +297,7 @@ app.get("/aktifProgramListele", function (req, res) {
     }
   });
 });
+
 app.get("/calisanProgramListele", function (req, res) {
   pool.connect((err, db, done) => {
     if (err) {
@@ -305,5 +317,109 @@ app.get("/calisanProgramListele", function (req, res) {
     }
   });
 });
+
+app.post('/manuelValfOn',function(req,res){
+  let valfNo = req.body.valf
+  console.log(valfNo)
+  
+  if(!client.isOpen){
+    client.connectTCP(deviceIP.wiseIP,{port:502})
+    .then(ress=>console.log('connection OK'))
+    .catch(err=>{
+      console.log(err)
+      return res.status(400).send(err)
+    })
+  }
+  else{
+    if(valfNo === 1)
+    {
+      client.writeCoil(16,1)
+      .then(response=>{
+        console.log('Valf 1 On')
+        return res.status(201).send({ message: "VALF-1 ON" })
+      })
+      .catch(err=>{
+        console.log(err)
+        return res.status(201).send({ message: "VALF-1 ON" })
+      })
+    }
+    if(valfNo === 2)
+    {
+      client.writeCoil(17,1)
+      .then(response=>{
+        console.log('Valf 2 On')
+        return res.status(201).send({ message: "VALF-2 ON" })
+      })
+      .catch(err=>{
+        console.log(err)
+        return res.status(201).send({ message: "VALF-2 ON" })
+      })
+    }
+    if(valfNo === 3)
+    {
+      client.writeCoil(18,1)
+      .then(response=>{
+        console.log('Valf 3 On')
+        return res.status(201).send({ message: "VALF-3 ON" })
+      })
+      .catch(err=>{
+        console.log(err)
+        return res.status(201).send({ message: "VALF-3 ON" })
+      })
+    }
+    
+  } 
+})
+
+app.post('/manuelValfOff',function(req,res){
+  let valfNo = req.body.valf
+  console.log(valfNo)
+  
+  if(!client.isOpen){
+    client.connectTCP(deviceIP.wiseIP,{port:502})
+    .then(ress=>console.log('connection OK'))
+    .catch(err=>console.log(err))
+  }
+  else{
+    if(valfNo === 1)
+    {
+      client.writeCoil(16,0)
+      .then(response=>{
+        console.log('Valf 1 Off')
+        return res.status(201).send({ message: "VALF-1 OFF" })
+      })
+      .catch(err=>{
+        console.log(err)
+        return res.status(201).send({ message: "VALF-1 OFF" })
+      })
+    }
+    if(valfNo === 2)
+    {
+      client.writeCoil(17,0)
+      .then(response=>{
+        console.log('Valf 2 Off')
+        return res.status(201).send({ message: "VALF-2 OFF" })
+      })
+      .catch(err=>{
+        console.log(err)
+        return res.status(201).send({ message: "VALF-2 OFF" })
+      })
+    }
+    if(valfNo === 3)
+    {
+      client.writeCoil(18,0)
+      .then(response=>{
+        console.log('Valf 3 Off')
+        return res.status(201).send({ message: "VALF-3 OFF" })
+      })
+      .catch(err=>{
+        console.log(err)
+        return res.status(201).send({ message: "VALF-3 OFF" })
+      })
+    }
+    
+  }
+})
+
 
 app.listen(PORT, () => console.log("Listening on port " + PORT));

@@ -2,12 +2,12 @@
     margin-top: 12px;
     color: white;
     text-align: center;
-    box-shadow: 0 0 20px 5px rgba(0, 0, 0, .6);
+    box-shadow: 0 0 10px 3px rgba(0, 0, 0, .6);
 }
 
 .programlarCard .cardImage{
-    border-top-left-radius: 24px;
-    border-top-right-radius: 24px;
+    border-top-left-radius: 10px;
+    border-top-right-radius: 10px;
     width: 100%;
 }
 

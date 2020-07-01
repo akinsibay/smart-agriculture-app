@@ -14,7 +14,8 @@ import {
   Label,
   Input,
   Badge,
-  Table
+  Table,
+  CardSubtitle
 } from "reactstrap";
 import { Modal, Message } from "semantic-ui-react";
 import { SettingOutlined } from "@ant-design/icons";
@@ -38,7 +39,7 @@ export default class Programlar extends Component {
       tekrar:null,
       phSet:null,
       ecSet:null,
-      valf1:null,valf2:null,valf3:null,valf4:null,valf5:null,valf6:null,valf7:null,valf8:null,
+      valf1:null,valf2:true,valf3:null,valf4:null,valf5:null,valf6:null,valf7:null,valf8:null,
       pazartesi:null,sali:null,carsamba:null,persembe:null,cuma:null,cumartesi:null,pazar:null,
       suankiValfler:[],
       suankiGunler:[]
@@ -141,11 +142,9 @@ export default class Programlar extends Component {
       valf1,valf2,valf3,valf4,valf5,valf6,valf7,valf8,
       pazartesi,sali,carsamba,persembe,cuma,cumartesi,pazar
     };
-    if(!valf1 && !valf2 && !valf3 && !valf4 && !valf5 && !valf6 && !valf7 && !valf8){
-      this.props.notification('','Hiçbir valf seçmediniz!','error')
-    }
-    else if(!pazartesi && !sali && !carsamba && !persembe && !cuma && !cumartesi && !pazar){
-      this.props.notification('','Hiçbir gün seçmediniz!','error')
+
+    if(!pazartesi && !sali && !carsamba && !persembe && !cuma && !cumartesi && !pazar){
+      this.props.notification('','Program eklenemedi : Gün seçmediniz!','error')
     }
     else{
       this.props.addData(newObject); 
@@ -153,23 +152,20 @@ export default class Programlar extends Component {
   };
 
   editProgram = ()=>{
-    const {valf1,valf2,valf3,valf4,valf5,valf6,valf7,valf8,pazartesi,sali,carsamba,persembe,cuma,cumartesi,pazar} = this.state.cardInfo; 
-  
-    if(!valf1 && !valf2 && !valf3 && !valf4 && !valf5 && !valf6 && !valf7 && !valf8){
-      this.props.notification('','Hiçbir valf seçmediniz!','error')
-    }
-    else if(!pazartesi && !sali && !carsamba && !persembe && !cuma && !cumartesi && !pazar){
-      this.props.notification('','Hiçbir gün seçmediniz!','error')
+    const {pazartesi,sali,carsamba,persembe,cuma,cumartesi,pazar} = this.state.cardInfo; 
+
+    if(!pazartesi && !sali && !carsamba && !persembe && !cuma && !cumartesi && !pazar){
+      this.props.notification('','Program düzenlenemedi! : Gün seçmediniz!','error')
     }
     else{
       this.props.editData(this.state.cardInfo)
     }  
   }
 
-  badgeJSX = (item) => {
+  badgeJSX = (item,index) => {
     return (
       <Badge
-        key={item.id}
+        key={index}
         color="success"
         style={{
           fontSize: "22px",
@@ -191,8 +187,7 @@ export default class Programlar extends Component {
     }});
   };
   
-
-  render() {
+  editProgramModalJSX = ()=>{
     const {
       programAdi,
       baslamaSaat,
@@ -205,116 +200,11 @@ export default class Programlar extends Component {
       tekrar,
       phSet,
       ecSet,
-      suankiValfler,
+      // suankiValfler,
       suankiGunler,
     } = this.state.cardInfo;
-    return (
-      <div className="bgImage">
-        {/* CARDS */}
-        
-        <Container fluid={true}>
-          <Row>
-            <Col xs={12} lg={2} md={2}>
-              <Button
-              color="warning"
-              size="lg"
-              onClick={this.addProgramButton}
-              style={{ marginTop: "15px",width:'100%' }}
-            >
-            <SettingOutlined style={{ fontSize: "24px" }} />
-             Yeni Program Ekle
-            </Button>
-            </Col>
-
-            <Col xs={12} lg={10} md={10}>
-            <Table dark className="calisanProgramTable">
-              <tbody>             
-                  <th>Çalışan Programlar</th>
-                    <td>
-                    {this.props.runningPrograms.length === 0 ? <Badge style={{fontSize:'22px',marginLeft:'5px',float:'right'}} color="warning" >Çalışan Program Yok</Badge> : this.props.runningPrograms.map(item=>this.badgeJSX(item))}
-                    </td>
-              </tbody>
-            </Table>  
-            </Col>
-          </Row>
-          <Row>
-            {this.props.card.map((item) => (            
-              <Col xs={12} lg={3} md={6} key={item.id}>
-                <Card
-                  key={item.id}
-                  className="programlarCard"
-                  style={{                 
-                    opacity: this.props.activeCards.find(
-                      (itm) => item.id === itm.programID
-                    )
-                      ? "1"
-                      : "0.7",
-                    backgroundColor: this.props.activeCards.find(
-                      (itm) => item.id === itm.programID
-                    )
-                      ? "#4caf50"
-                      : "#37474f",
-                    borderRadius:'24px'
-                  }}
-                >
-                  <CardImg
-                    key={item.id}
-                    className="cardImage"
-                    top
-                    src={svg}
-                    alt="Card image cap"
-                  />
-                  <CardBody key={item.id}>
-                    <CardTitle key={item.id} className="cardTitle">Program : {item.programAdi}</CardTitle>            
-                    
-                    <ButtonGroup className="cardButtonGroup">
-                      <Button
-                        key={item.id}
-                        className="cardButtons"
-                        color="success"
-                        onClick={() => this.props.activeButton(item)}
-                      >
-                        Aktif
-                      </Button>
-                      <Button
-                        key={item.id}
-                        className="cardButtons"
-                        color="info"
-                        onClick={() => this.props.passiveButton(item)}
-                      >
-                        Pasif
-                      </Button>
-                      <Button
-                        disabled={this.props.activeCards.find((itm)=>item.id === itm.programID) ? true : false}
-                        key={item.id}
-                        className="cardButtons"
-                        color="warning"
-                        onClick={() => {
-                          this.editProgramButton(item);
-                        }}
-                      >
-                        Düzenle
-                      </Button>
-                      <Button
-                        key={item.id}
-                        className="cardButtons"
-                        color="danger"
-                        onClick={() => {
-                          this.deleteProgramButton(item);
-                        }}
-                      >
-                        Sil
-                      </Button>
-                    </ButtonGroup>
-                  </CardBody>
-                </Card>
-              </Col>
-            ))}
-          </Row>
-        </Container>
-
-        {/* EDİT PROGRAM*/}
-
+    
+      return(
         <Modal
           size="large"
           open={this.state.editModalOpen}
@@ -518,29 +408,29 @@ export default class Programlar extends Component {
                       <FormGroup row>
                       <Label for="valf" style={{ fontSize: "24px" }} xs={5}>
                         Valf 
-                      <p><Badge>{'Önceki Seçim->'}</Badge>{suankiValfler.length===0 ? <Badge color="warning">SEÇİM YOK</Badge> : suankiValfler.map(item=>(<Badge color="info" style={{marginRight:'2px'}}>{item}</Badge>))}</p>
+                      {/* <p><Badge>{'Önceki Seçim->'}</Badge>{suankiValfler.length===0 ? <Badge color="warning">SEÇİM YOK</Badge> : suankiValfler.map((item,index)=>(<Badge key={index} color="info" style={{marginRight:'2px'}}>{item}</Badge>))}</p> */}
                         </Label>
                         <Col xs={7}>
-                        <input name="valf1" type="checkbox" onClick={this.onChangeSwitch} onChangeCapture={this.onChangeSwitch} /*defaultChecked={suankiValfler.find(item=> item==="valf1") && true}*//><Label className="checkboxLabel">Valf-1</Label>
-                        <input name="valf2" type="checkbox" onClick={this.onChangeSwitch} onChangeCapture={this.onChangeSwitch} /*defaultChecked={suankiValfler.find(item=> item==="valf2") && true}*//><Label className="checkboxLabel">Valf-2</Label>
-                        <input name="valf3" type="checkbox" onClick={this.onChangeSwitch} onChangeCapture={this.onChangeSwitch} /*defaultChecked={suankiValfler.find(item=> item==="valf3") && true}*//><Label className="checkboxLabel">Valf-3</Label>
-                        <input name="valf4" type="checkbox" onClick={this.onChangeSwitch} onChangeCapture={this.onChangeSwitch} /*defaultChecked={suankiValfler.find(item=> item==="valf4") && true}*//><Label className="checkboxLabel">Valf-4</Label>
-                        <input name="valf5" type="checkbox" onClick={this.onChangeSwitch} onChangeCapture={this.onChangeSwitch} /*defaultChecked={suankiValfler.find(item=> item==="valf5") && true}*//><Label className="checkboxLabel">Valf-5</Label>
-                        <input name="valf6" type="checkbox" onClick={this.onChangeSwitch} onChangeCapture={this.onChangeSwitch} /*defaultChecked={suankiValfler.find(item=> item==="valf6") && true}*//><Label className="checkboxLabel">Valf-6</Label>
-                        <input name="valf7" type="checkbox" onClick={this.onChangeSwitch} onChangeCapture={this.onChangeSwitch} /*defaultChecked={suankiValfler.find(item=> item==="valf7") && true}*//><Label className="checkboxLabel">Valf-7</Label>
-                        <input name="valf8" type="checkbox" onClick={this.onChangeSwitch} onChangeCapture={this.onChangeSwitch} /*defaultChecked={suankiValfler.find(item=> item==="valf8") && true}*//><Label className="checkboxLabel">Valf-8</Label>
+                        <input name="valf1" type="checkbox" onClick={this.onChangeSwitch}  disabled={true}/><Label className="checkboxLabel">Valf-1</Label>
+                        <input name="valf2" type="checkbox" onClick={this.onChangeSwitch}  checked={true}/><Label className="checkboxLabel">Valf-2</Label>
+                        <input name="valf3" type="checkbox" onClick={this.onChangeSwitch}  disabled={true}/><Label className="checkboxLabel">Valf-3</Label>
+                        <input name="valf4" type="checkbox" onClick={this.onChangeSwitch}  disabled={true}/><Label className="checkboxLabel">Valf-4</Label>
+                        <input name="valf5" type="checkbox" onClick={this.onChangeSwitch}  disabled={true}/><Label className="checkboxLabel">Valf-5</Label>
+                        <input name="valf6" type="checkbox" onClick={this.onChangeSwitch}  disabled={true}/><Label className="checkboxLabel">Valf-6</Label>
+                        <input name="valf7" type="checkbox" onClick={this.onChangeSwitch}  disabled={true}/><Label className="checkboxLabel">Valf-7</Label>
+                        <input name="valf8" type="checkbox" onClick={this.onChangeSwitch}  disabled={true}/><Label className="checkboxLabel">Valf-8</Label>
                         </Col>
                     </FormGroup>
                       
                     <FormGroup row>
                       <Label for="günler" style={{fontSize:"24px"}} xs={5}>
                       Günler 
-                      <p><Badge>{'Önceki Seçim->'}</Badge>{suankiGunler.length===0 ? <Badge color="warning">SEÇİM YOK</Badge> : suankiGunler.map(item=>(<Badge color="info" style={{marginRight:'2px'}}>{item}</Badge>))}</p>
+                      <p><Badge>{'Önceki Seçim->'}</Badge>{suankiGunler.length===0 ? <Badge color="warning">SEÇİM YOK</Badge> : suankiGunler.map((item,index)=>(<Badge key={index} color="info" style={{marginRight:'2px'}}>{item}</Badge>))}</p>
                       </Label>
                       <Col xs={7}>
                         <input name="pazartesi" type="checkbox" onClick={this.onChangeSwitch} /*defaultChecked={suankiGunler.find(item=> item==="pazartesi") && true}*//><Label className="checkboxLabel">Pazartesi</Label>
                         <input name="sali" type="checkbox" onClick={this.onChangeSwitch} /*defaultChecked={suankiGunler.find(item=> item==="sali") && true}*//><Label className="checkboxLabel">Salı</Label>
-                        <input name="carsamba" type="checkbox" onClick={this.onChangeSwitch} /*defaultChecked={suankiGunler.find(item=> item==="carsamba") && true}*//><Label className="checkboxLabel">Çarşamba</Label>
+                        <input name="carsamba" type="checkbox" onClick={this.onChangeSwitch}  /*defaultChecked={suankiGunler.find(item=> item==="carsamba") && true}*//><Label className="checkboxLabel">Çarşamba</Label>
                         <input name="persembe" type="checkbox" onClick={this.onChangeSwitch} /*defaultChecked={suankiGunler.find(item=> item==="persembe") && true}*//><Label className="checkboxLabel">Perşembe</Label>
                         <input name="cuma" type="checkbox" onClick={this.onChangeSwitch} /*defaultChecked={suankiGunler.find(item=> item==="cuma") && true}*//><Label className="checkboxLabel">Cuma</Label>
                         <input name="cumartesi" type="checkbox" onClick={this.onChangeSwitch} /*defaultChecked={suankiGunler.find(item=> item==="cumartesi") && true}*//><Label className="checkboxLabel">Cumartesi</Label>
@@ -563,10 +453,26 @@ export default class Programlar extends Component {
             </Container>
           </Modal.Content>
         </Modal>
-
-        {/* ADD PROGRAM */}
-
-        <Modal
+      )
+  }
+  
+  addProgramModalJSX = ()=>{
+    const {
+      programAdi,
+      baslamaSaat,
+      calismaSuresiSaat,
+      calismaSuresiDakika,
+      calismaSuresiSaniye,
+      beklemeSuresiSaat,
+      beklemeSuresiDakika,
+      beklemeSuresiSaniye,
+      tekrar,
+      phSet,
+      ecSet,
+    } = this.state.cardInfo;
+    
+    return(
+      <Modal
           size="large"
           open={this.state.addModalOpen}
           onClose={this.addModalClose}
@@ -773,14 +679,14 @@ export default class Programlar extends Component {
                           Valf
                         </Label>
                         <Col xs={7}>
-                        <input name="valf1" type="checkbox" onClick={this.onChangeSwitch}/><Label className="checkboxLabel">Valf-1</Label>
-                        <input name="valf2" type="checkbox" onClick={this.onChangeSwitch}/><Label className="checkboxLabel">Valf-2</Label>
-                        <input name="valf3" type="checkbox" onClick={this.onChangeSwitch}/><Label className="checkboxLabel">Valf-3</Label>
-                        <input name="valf4" type="checkbox" onClick={this.onChangeSwitch}/><Label className="checkboxLabel">Valf-4</Label>
-                        <input name="valf5" type="checkbox" onClick={this.onChangeSwitch}/><Label className="checkboxLabel">Valf-5</Label>
-                        <input name="valf6" type="checkbox" onClick={this.onChangeSwitch}/><Label className="checkboxLabel">Valf-6</Label>
-                        <input name="valf7" type="checkbox" onClick={this.onChangeSwitch}/><Label className="checkboxLabel">Valf-7</Label>
-                        <input name="valf8" type="checkbox" onClick={this.onChangeSwitch}/><Label className="checkboxLabel">Valf-8</Label>
+                        <input name="valf1" type="checkbox" onClick={this.onChangeSwitch} disabled={true}/><Label className="checkboxLabel">Valf-1</Label>
+                        <input name="valf2" type="checkbox" onClick={this.onChangeSwitch} checked={true}/><Label className="checkboxLabel">Valf-2</Label>
+                        <input name="valf3" type="checkbox" onClick={this.onChangeSwitch} disabled={true}/><Label className="checkboxLabel">Valf-3</Label>
+                        <input name="valf4" type="checkbox" onClick={this.onChangeSwitch} disabled={true}/><Label className="checkboxLabel">Valf-4</Label>
+                        <input name="valf5" type="checkbox" onClick={this.onChangeSwitch} disabled={true}/><Label className="checkboxLabel">Valf-5</Label>
+                        <input name="valf6" type="checkbox" onClick={this.onChangeSwitch} disabled={true}/><Label className="checkboxLabel">Valf-6</Label>
+                        <input name="valf7" type="checkbox" onClick={this.onChangeSwitch} disabled={true}/><Label className="checkboxLabel">Valf-7</Label>
+                        <input name="valf8" type="checkbox" onClick={this.onChangeSwitch} disabled={true}/><Label className="checkboxLabel">Valf-8</Label>
                         </Col>
                     </FormGroup>
 
@@ -810,7 +716,140 @@ export default class Programlar extends Component {
               </Row>
             </Container>
           </Modal.Content>
-        </Modal>     
+        </Modal>
+    )
+  }
+
+  cardSubtitleBadgeJSX = (item)=>{
+    return (
+      <div>
+        <Badge color="warning" style={{fontSize:'20px',marginTop:'5px',marginLeft:'2px'}}>{item.baslamaSaat}</Badge>
+        <Badge color="info" style={{fontSize:'20px',marginTop:'5px',marginLeft:'2px'}}>{'PH: '+item.phSet}</Badge>
+        <Badge color="info" style={{fontSize:'20px',marginTop:'5px',marginLeft:'2px'}}>{'EC: '+item.ecSet}</Badge>
+      </div> 
+    )
+  }
+
+  cardsJSX = ()=>{
+    return(
+      <Container fluid={true}>
+          <Row>
+            <Col xs={12} lg={2} md={2}>
+              <Button
+              color="warning"
+              size="lg"
+              onClick={this.addProgramButton}
+              style={{ marginTop: "15px",width:'100%' }}
+            >
+            <SettingOutlined style={{ fontSize: "24px" }} />
+             Yeni Program Ekle
+            </Button>
+            </Col>
+
+            <Col xs={12} lg={10} md={10}>
+            <Table dark className="calisanProgramTable">
+              <tbody>             
+                  <th>Çalışan Programlar</th>
+                    <td>
+                    {this.props.runningPrograms.length === 0 ? <Badge style={{fontSize:'22px',marginLeft:'5px',float:'right'}} color="warning" >Çalışan Program Yok</Badge> : this.props.runningPrograms.map((item,index)=>this.badgeJSX(item,index))}
+                    </td>
+              </tbody>
+            </Table>  
+            </Col>
+          </Row>
+          <Row>
+            {this.props.card.map((item,index) => (            
+              <Col xs={12} lg={3} md={6} key={index}>
+                <Card
+                  key={index}
+                  className="programlarCard"
+                  style={{                 
+                    backgroundColor: this.props.activeCards.find(
+                      (itm) => item.id === itm.programID
+                    )
+                      ? "#1faa00"
+                      : "#37474f",
+                    borderRadius:'10px'
+                  }}
+                >
+                  <CardImg
+                    key={index}
+                    className="cardImage"
+                    top
+                    src={svg}
+                    alt="Card image cap"
+                  />
+                  <CardBody key={index}>
+                    <CardTitle key={index} className="cardTitle">Program : {item.programAdi}</CardTitle>            
+                    <CardSubtitle>{this.cardSubtitleBadgeJSX(item)}</CardSubtitle>
+                    <ButtonGroup className="cardButtonGroup">
+                      <Button
+                        key={index}
+                        className="cardButtons"
+                        color="success"
+                        onClick={() => this.props.activeButton(item)}
+                      >
+                        Aktif
+                      </Button>
+                      <Button
+                        key={index}
+                        className="cardButtons"
+                        color="secondary"
+                        onClick={() => this.props.passiveButton(item)}
+                      >
+                        Pasif
+                      </Button>
+                      <Button
+                        disabled={this.props.activeCards.find((itm)=>item.id === itm.programID) ? true : false}
+                        key={index}
+                        className="cardButtons"
+                        color="warning"
+                        onClick={() => {
+                          this.editProgramButton(item);
+                        }}
+                      >
+                        Düzenle
+                      </Button>
+                      <Button
+                        key={index}
+                        className="cardButtons"
+                        color="danger"
+                        onClick={() => {
+                          this.deleteProgramButton(item);
+                        }}
+                      >
+                        Sil
+                      </Button>
+                    </ButtonGroup>
+                  </CardBody>
+                </Card>
+              </Col>
+            ))}
+          </Row>
+        </Container>
+    )
+  }
+  componentDidMount() {
+    document.title = "APRA TARIM - Programlar"
+  }
+  
+
+  render() {
+    return (
+      <div className="bgImage">
+        
+        {/* CARDS */}
+        
+        {this.cardsJSX()}
+        
+
+        {/* EDİT PROGRAM*/}
+
+        {this.editProgramModalJSX()}
+
+        {/* ADD PROGRAM */}
+
+        {this.addProgramModalJSX()}
       
       </div>
     );

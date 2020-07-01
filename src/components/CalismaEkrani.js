@@ -2,26 +2,27 @@ import React, { Component } from "react";
 import "../style/CalismaEkrani.css";
 import "../style/Genel.css";
 import { Icon } from 'react-icons-kit'
-import {sun} from 'react-icons-kit/icomoon/sun'
-import {fire} from 'react-icons-kit/icomoon/fire'
+// import {sun} from 'react-icons-kit/icomoon/sun'
+// import {fire} from 'react-icons-kit/icomoon/fire'
 import {lab} from 'react-icons-kit/icomoon/lab'
 import {ic_schedule} from 'react-icons-kit/md/ic_schedule'
-import {ic_invert_colors} from 'react-icons-kit/md/ic_invert_colors'
+// import {ic_invert_colors} from 'react-icons-kit/md/ic_invert_colors'
 import {starFull} from 'react-icons-kit/icomoon/starFull'
 import {steam} from 'react-icons-kit/icomoon/steam'
 import {cancelCircle} from 'react-icons-kit/icomoon/cancelCircle'
 import { CircularProgressbar, buildStyles } from "react-circular-progressbar";
 import { Container, Row, Col, Badge, Button, Table,Progress } from "reactstrap";
-import Thermometer from 'react-thermometer-ecotropy'
-import ReactSpeedometer from "react-d3-speedometer"
+// import Thermometer from 'react-thermometer-ecotropy'
+// import ReactSpeedometer from "react-d3-speedometer"
 import alertify from 'alertifyjs'
 export default class CalismaEkrani extends Component {
-  badgeJSX = (item) => {
+
+  activeProgramBadgeJSX = (item,index) => {
     return (
       <div>
        <Badge
         className="badges"
-        key={item.id}
+        key={index}
         color="success"
       >
       {item.programAdi}       
@@ -30,7 +31,22 @@ export default class CalismaEkrani extends Component {
       </div>        
     );
   };
-
+  runningBadgeJSX = (status,item,index) => {
+      return (
+        <Badge
+          key={index}
+          color={status === 1 ? "success" : "warning"}
+          style={{
+            fontSize: "24px",
+            marginLeft:'5px',
+            marginTop:'5px',
+            float:'right'
+          }}
+        >
+          {status === 1 ? (item.programAdi+' çalışıyor').toUpperCase() : "ÇALIŞAN PROGRAM YOK"}
+        </Badge>       
+      );  
+  };
   duraklat = () => {
     alert("duraklatıldı");
   };
@@ -44,14 +60,21 @@ export default class CalismaEkrani extends Component {
   };
   acildurus = () => {
     alert("acil durduruldu");
-  }; 
-  
-  render() {
-    const { sicaklik, nem, ph, ec, debi } = this.props.sahaVerileri;
-    return (
-      <div className="bgColor">
-        <Container fluid={true}>
+  };
+
+  kalanSure = ()=>{  
+      return(
+        <Badge color="info" className="badges">{this.props.programKalanSure}</Badge>               
+      )                      
+          
+  }
+  tablesJSX=()=>{
+    const { ph, ec } = this.props.sahaVerileri;
+    const {runningPrograms} = this.props;
+    return(
+      <Container fluid={true}>
         <Button color="danger" className="acilStop" onClick={this.acildurus}><Icon size={28} icon={cancelCircle}/> Acil Duruş</Button>
+        {runningPrograms.length > 0 ? runningPrograms.map((item,index)=>this.runningBadgeJSX(1,item,index)) : this.runningBadgeJSX(0,'',1)}
           <Row>
             <Col xs={12} lg={9} md={9} style={{ marginTop: "10px" }}>
               <Table dark className="sulamaProgrami">
@@ -70,43 +93,43 @@ export default class CalismaEkrani extends Component {
                   </tr>
                   <tr>
                     <td>
-                      {this.props.cards.map((item) =>
+                      {this.props.cards.map((item,index) =>
                         this.props.activeCards.find((itm) => itm.programID === item.id)
-                          ? this.badgeJSX(item)
+                          ? this.activeProgramBadgeJSX(item,index)
                           : ""
                       )}
                       {this.props.activeCards.length === 0 ? (<Badge className="badges" color="warning" >Seçili Program Yok</Badge>) : ""}
                     </td>
                     <td>
-                    {this.props.activeCards.length === 0 ? "" : this.props.activeCards.map(item=><Badge key={item.programID} color="info" className="badges">{item.calismaSuresiSaat+' sa '+item.calismaSuresiDakika+' dk '+item.calismaSuresiSaniye+' sn'}</Badge>)}
+                    {this.props.activeCards.length === 0 ? "" : this.props.activeCards.map((item,index)=><Badge key={index} color="info" className="badges">{item.calismaSuresiSaat+' sa '+item.calismaSuresiDakika+' dk '+item.calismaSuresiSaniye+' sn'}</Badge>)}
                     </td>
                     <td>
-                    {this.props.activeCards.length === 0 ? "" : this.props.activeCards.map(item=><Badge key={item.programID} color="info" className="badges">..</Badge>)}  
+                      {this.props.activeCards.length === 0 ? "" : this.kalanSure()}  
                     </td>
                     <td>
-                      {this.props.activeCards.length === 0 ? "" : this.props.activeCards.map(item=><Badge key={item.programID} color="info" className="badges">{item.Valfler.valf+' '}</Badge>)}
+                      {this.props.activeCards.length === 0 ? "" : this.props.activeCards.map((item,index)=><Badge key={index} color="info" className="badges">{/*item.Valfler.valf+' '*/'Valf 2'}</Badge>)}
                     </td>
                     <td>
-                      {this.props.activeCards.length === 0 ? "" : this.props.activeCards.map(item=>
-                      <Badge key={item.programID} className="badges" style={{cursor:'pointer'}} onClick={()=>this.passiveProgram(item)}color="danger">X</Badge>)                                                                 
+                      {this.props.activeCards.length === 0 ? "" : this.props.activeCards.map((item,index)=>
+                      <Badge key={index} className="badges" style={{cursor:'pointer'}} onClick={()=>this.passiveProgram(item)}color="danger">X</Badge>)                                                                 
                       }
                     </td>
                   </tr>
 
-                  <tr className="sulamaProgramiUst">
+                  {/* <tr className="sulamaProgramiUst">
                     <th colSpan="2"><Icon size={32} icon={lab}/> PH</th>
                     <th colSpan="2"><Icon size={32} icon={lab}/> EC</th>
                   </tr>
                   <tr>
                     <td colSpan="2">
                       <div className="progressDiv">{ph}</div>
-                      <Progress striped color={ph>11 ? "danger":(ph>9 ? "warning":"success")} className="progress" value={ph} max={14} />
+                      <Progress color={ph>11 ? "danger":(ph>9 ? "warning":"success")} className="progress" value={ph} max={14} />
                     </td>
                     <td colSpan="2">
                       <div className="progressDiv">{ec}</div>
-                      <Progress striped color={ec>4.7 ? "danger":(ec>3.5 ? "warning":"success")} className="progress" value={ec} max={5} />
+                      <Progress color={ec>4.7 ? "danger":(ec>3.5 ? "warning":"success")} className="progress" value={ec} max={5} />
                     </td>
-                  </tr>
+                  </tr> */}
                   
                   <tr>
                     
@@ -195,7 +218,7 @@ export default class CalismaEkrani extends Component {
             </Col>
           </Row>
 
-          <Row>
+          {/* <Row>
             <Col xs={12} md={12} lg={12} style={{ marginTop: "5px" }}>
             <Table dark className="sahaVerileri">
                 <thead>
@@ -288,8 +311,18 @@ export default class CalismaEkrani extends Component {
                 </tbody>
               </Table>
             </Col>                   
-          </Row>
-        </Container>       
+          </Row> */}
+        </Container>
+    )
+  }
+  componentDidMount() {
+    document.title = "APRA TARIM - Ana Sayfa"
+  }
+  
+  render() {  
+    return (
+      <div className="bgImage">
+         {this.tablesJSX()}
       </div>
     );
   }

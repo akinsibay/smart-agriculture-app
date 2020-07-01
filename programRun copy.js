@@ -4,7 +4,7 @@ let timers={} //zaman intervaller objesi
 let calisTimers={} //çalışma intervaller objesi
 let bekleTimers={} //bekleme intervaller objesi
 let tekrarIndis={} //tekrar indisleri objesi (i)
-var modbus = require('./modbus')
+var suHazirlama = require('./suHazirlama')
 let pg = require("pg");
 
 let pool = new pg.Pool({
@@ -20,7 +20,6 @@ let pool = new pg.Pool({
 let islemler = {
   calis: function (kart, callback) {
     var id = kart.id || kart.programID
-    modbus.run(kart)
     console.log(kart.programAdi+' tekrar indis: '+tekrarIndis['no'+id])
     calisTimers['no'+id] = setTimeout(() => { //bu programa ait bir çalışma timerı oluştur
       callback(kart,this.again);
@@ -28,7 +27,6 @@ let islemler = {
   },
   bekle: function (kart, callback) {
     var id = kart.id || kart.programID
-    console.log(kart.programAdi+' '+modbus.stop())
     bekleTimers['no'+id] = setTimeout(() => { //bu programa ait bir bekleme timerı oluştur
       callback(kart);
     }, kart._beklemeSuresi*1000);
@@ -108,20 +106,20 @@ let islemler = {
         console.log('bekleme timerı durdu')
         dbdenSil(kart)
       }
-      modbus.stop()
       aktifKartlar = aktifKartlar.filter(item=>item!==kart.id || kart.programID)
       console.log('sonra:',aktifKartlar)
       tekrarIndis['no'+id] = 0;
   },
 };
 function dbyeYaz(kart){
-  let programAdi = kart.programAdi
+  let {programAdi,_calismaSuresi,_beklemeSuresi,_tekrar,_gunler,_baslamaZamani,_phSet,_ecSet,_valfler} = kart
   pool.connect((err, db, done) => {
     if (err) {
       return console.log(err)
     } else {
       db.query(
-        'INSERT INTO public."CalisanProgramlar"("programAdi") VALUES ($1);',[programAdi],     
+        'INSERT INTO public."CalisanProgramlar"("programAdi", "baslamaZamani", "calismaSuresiSaniye", "beklemeSuresiSaniye", "tekrar", "phSet", "ecSet", "Valfler", "Gunler") VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9);',
+        [programAdi,_baslamaZamani,_calismaSuresi,_beklemeSuresi,_tekrar,_phSet,_ecSet,_valfler,_gunler],     
         (err) => {
           done()
           if (err) {      

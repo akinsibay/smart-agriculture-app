@@ -2,8 +2,8 @@
 
 /* TABLE 1 */
 .sahaVerileri{
-    border-radius: 24px;
-    box-shadow: 0 0 20px 5px rgba(0, 0, 0, .6);
+    border-radius: 10px;
+    box-shadow: 0 0 10px 3px rgba(0, 0, 0, .6);
 }
 .sahaVerileri thead th{
     font-size: 32px;
@@ -21,8 +21,8 @@
 /* TABLE 2 */
 
 .suHazirlama{
-    border-radius: 24px;
-    box-shadow: 0 0 20px 5px rgba(0, 0, 0, .6);
+    border-radius: 10px;
+    box-shadow: 0 0 10px 3px rgba(0, 0, 0, .6);
 }
 .suHazirlama thead th{
     font-size: 32px;
@@ -47,15 +47,14 @@
     top:7px;
 }
 .suHazirlama .progress{
-    border-radius: 48px;
     margin-top: -15px;
     height: 25px;
 }
 /* TABLE 3 */
 
 .sulamaProgrami{
-    border-radius: 24px;
-    box-shadow: 0 0 20px 5px rgba(0, 0, 0, .6);
+    border-radius: 10px;
+    box-shadow: 0 0 10px 3px rgba(0, 0, 0, .6);
 }
 .sulamaProgrami thead th{
     font-size: 32px;
@@ -81,7 +80,7 @@
 .sulamaProgrami .progress{
     height: 40px;
     margin-bottom: 15px;
-    border-radius: 48px;
+    border-radius: 12px;
 }
 
 .sulamaProgrami .progressDiv{
@@ -92,7 +91,7 @@
     top:30px;
 }
 
-.bgColor .acilStop{
+.bgImage .acilStop{
     font-size: 24px;
     margin-top: 5px;
     border-radius: 12px;
