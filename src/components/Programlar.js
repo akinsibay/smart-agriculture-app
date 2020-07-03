@@ -726,6 +726,7 @@ export default class Programlar extends Component {
         <Badge color="warning" style={{fontSize:'20px',marginTop:'5px',marginLeft:'2px'}}>{item.baslamaSaat}</Badge>
         <Badge color="info" style={{fontSize:'20px',marginTop:'5px',marginLeft:'2px'}}>{'PH: '+item.phSet}</Badge>
         <Badge color="info" style={{fontSize:'20px',marginTop:'5px',marginLeft:'2px'}}>{'EC: '+item.ecSet}</Badge>
+        <Badge color="info" style={{fontSize:'20px',marginTop:'5px',marginLeft:'2px'}}>{Number((item.calismaSuresiSaat*60+item.calismaSuresiDakika+item.calismaSuresiSaniye/60)*item.tekrar).toFixed(1)+' dk'}</Badge>
       </div> 
     )
   }
@@ -811,6 +812,7 @@ export default class Programlar extends Component {
                         Düzenle
                       </Button>
                       <Button
+                        disabled={this.props.activeCards.find((itm)=>item.id === itm.programID) ? true : false}
                         key={index}
                         className="cardButtons"
                         color="danger"

@@ -7,7 +7,9 @@ let pcIP = ip.address()
 var suHazirlama = require('./suHazirlama')
 var ModbusRTU = require("modbus-serial");
 var client = new ModbusRTU();
+var omnicon = new ModbusRTU();
 client.setTimeout(1000);
+omnicon.setTimeout(1000);
 const deviceIP = require("./src/config/deviceIP");
 const PORT = 3001;
 
@@ -16,7 +18,7 @@ let pool = new pg.Pool({
   port: 5432,
   password: "159753",
   database: "postgres",
-  host: pcIP,
+  host: 'localhost',
   user: "postgres",
 });
 
@@ -320,7 +322,6 @@ app.get("/calisanProgramListele", function (req, res) {
 
 app.post('/manuelValfOn',function(req,res){
   let valfNo = req.body.valf
-  console.log(valfNo)
   
   if(!client.isOpen){
     client.connectTCP(deviceIP.wiseIP,{port:502})
@@ -340,7 +341,7 @@ app.post('/manuelValfOn',function(req,res){
       })
       .catch(err=>{
         console.log(err)
-        return res.status(201).send({ message: "VALF-1 ON" })
+        return res.status(400).send({ message: "VALF-1 ON" })
       })
     }
     if(valfNo === 2)
@@ -352,7 +353,7 @@ app.post('/manuelValfOn',function(req,res){
       })
       .catch(err=>{
         console.log(err)
-        return res.status(201).send({ message: "VALF-2 ON" })
+        return res.status(400).send({ message: "VALF-2 ON" })
       })
     }
     if(valfNo === 3)
@@ -364,7 +365,7 @@ app.post('/manuelValfOn',function(req,res){
       })
       .catch(err=>{
         console.log(err)
-        return res.status(201).send({ message: "VALF-3 ON" })
+        return res.status(400).send({ message: "VALF-3 ON" })
       })
     }
     
@@ -373,12 +374,14 @@ app.post('/manuelValfOn',function(req,res){
 
 app.post('/manuelValfOff',function(req,res){
   let valfNo = req.body.valf
-  console.log(valfNo)
   
   if(!client.isOpen){
     client.connectTCP(deviceIP.wiseIP,{port:502})
     .then(ress=>console.log('connection OK'))
-    .catch(err=>console.log(err))
+    .catch(err=>{
+      console.log(err)
+      return res.status(400).send(err)
+    })
   }
   else{
     if(valfNo === 1)
@@ -390,7 +393,7 @@ app.post('/manuelValfOff',function(req,res){
       })
       .catch(err=>{
         console.log(err)
-        return res.status(201).send({ message: "VALF-1 OFF" })
+        return res.status(400).send({ message: "VALF-1 OFF" })
       })
     }
     if(valfNo === 2)
@@ -402,7 +405,7 @@ app.post('/manuelValfOff',function(req,res){
       })
       .catch(err=>{
         console.log(err)
-        return res.status(201).send({ message: "VALF-2 OFF" })
+        return res.status(400).send({ message: "VALF-2 OFF" })
       })
     }
     if(valfNo === 3)
@@ -414,12 +417,142 @@ app.post('/manuelValfOff',function(req,res){
       })
       .catch(err=>{
         console.log(err)
-        return res.status(201).send({ message: "VALF-3 OFF" })
+        return res.status(400).send({ message: "VALF-3 OFF" })
       })
     }
     
   }
 })
 
+app.post('/pompaOnOff',function(req,res){
+  let pompaStatus = req.body.pompaStatus
 
+  if(!client.isOpen){
+    client.connectTCP(deviceIP.wiseIP,{port:502})
+    .then(ress=>console.log('connection OK'))
+    .catch(err=>{
+      console.log(err)
+      return res.status(400).send(err)
+    })
+  }
+  else{
+    if(pompaStatus === 1)
+    {
+      client.writeCoil(19,1)
+      .then(response=>{
+        console.log('Pompa On')
+        return res.status(201).send({ message: "POMPA ON" })
+      })
+      .catch(err=>{
+        console.log(err)
+        return res.status(400).send()
+      })
+    }
+    if(pompaStatus === 0)
+    {
+      client.writeCoil(19,0)
+      .then(response=>{
+        console.log('Pompa Off')
+        return res.status(201).send({ message: "Pompa Off" })
+      })
+      .catch(err=>{
+        console.log(err)
+        return res.status(400).send()
+      })
+    }   
+  }
+})
+
+app.get("/anlikVeriCek", function (req, res) {
+  if(!client.isOpen || !omnicon.isOpen){
+    client.connectTCP(deviceIP.wiseIP,{port:502})
+    .then(resp=>{
+      omnicon.connectTCP(deviceIP.omniconIP,{port:502})
+      .then(resp=>console.log('anlık okuma için cihazlara bağlantı başarılı')) //şuraya bir return konabilir
+      .catch(err=>console.log(err))
+    })
+    .catch(err=>{
+      console.log(err)
+      return res.status(400).send()
+    })
+  }
+  else{
+    client.readInputRegisters(0,4)
+    .then(resp=>{
+      let wiseValues = resp.data
+      omnicon.readHoldingRegisters(0,2)
+      .then(resp=>{
+        let ph=resp.data[0]
+        let ec=resp.data[1]
+        let allValues = [ph,ec,...wiseValues]
+        anlikVeriYaz(allValues)
+        return res.status(200).send(allValues)
+      })        
+    })
+    .catch(err=>{
+      console.log(err)
+      return res.status(400).send()
+    }) 
+  }     
+});
+
+app.get("/acilStop", function (req, res) {
+     
+  if(!client.isOpen){
+    client.connectTCP(deviceIP.wiseIP,{port:502})
+    .then(resp=>console.log('connection OK'))
+    .catch(err=>{
+      console.log(err)
+      return res.status(400).send()
+    })
+  }
+  else{
+    client.writeCoil(16,0)
+    .then(resp=>{
+        console.log('Valf 1 kapatıldı')
+        client.writeCoil(17,0)
+        .then(resp=>{
+            console.log('Valf 2 kapatıldı')
+            client.writeCoil(18,0)
+            .then(resp=>{
+              console.log('Valf 3 kapatıldı')
+              client.writeCoil(19,0)
+              .then(resp=>{
+                console.log('Motor durduruldu')
+                return res.status(200).send()
+              })           
+            })
+            .catch(err=>console.log(err))
+        })
+        .catch(err=>console.log(err))
+    })
+    .catch(err=>console.log(err)) 
+  }     
+});
+function anlikVeriYaz(datalar){
+  let now = new Date()
+  let kayitZamani = now.toLocaleString();
+  let ph = datalar[0]/100
+  let ec = datalar[1]/100
+  let tankSeviyesi = datalar[2]
+  pool.connect((err, db, done) => {
+      if (err) {
+        return console.log(err)
+      } else {
+        db.query(
+          'INSERT INTO public."Veriler"("PH", "EC", "TankSeviye", "Zaman") VALUES ($1, $2, $3, $4);',
+          [ph,ec,tankSeviyesi,kayitZamani],     
+          (err) => {
+            done()
+            if (err) {      
+              return console.log(err)
+            } else {
+              //db.end();
+              //console.log('veritabanına yazıldı')
+            }
+          }
+        );
+      }
+    });
+}
 app.listen(PORT, () => console.log("Listening on port " + PORT));

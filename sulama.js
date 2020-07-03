@@ -44,14 +44,14 @@ let islemler = {
             if (suankiSaat === kart._baslamaZamani) {
                 console.log("sulama basladi kart id:",kart.id || kart.programID );
                 console.log(suHazirlama.suSeviyesi)
-                if(suHazirlama.suSeviyesi > 0){
+                if(suHazirlama.suSeviyesi > 0.1){
                   islemler.calis(kart,islemler.bekle);
                   tekrarIndis['no'+id] = 0;
                   clearInterval(timers['no'+id])
                 }
                 else{
-                  console.log('Su seviyesi programı başlatmak için uygun değil!')
-                  suHazirlama.wiseConnect(kart) //tekrar su hazırlamaya başla
+                  console.log('Su seviyesi yetersiz. Su hazırlanıyor...')
+                  suHazirlama.deviceConnect(kart) //tekrar su hazırlamaya başla
                   tekrarIndis['no'+id] = 0;
                   clearInterval(timers['no'+id])
                 }               

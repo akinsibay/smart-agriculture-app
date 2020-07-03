@@ -26,8 +26,8 @@ export default class Servis extends Component {
       loginSuccess: false,
     },
     valfler:[1,2,3],
-    pompalar:['Pompa 1','Pompa 2','Pompa 3','EC Pompası','Asit Pompası'],
-    onValfler:[]
+    onValfler:[],
+    pompaStatus:false
   };
 
   login = () => {
@@ -36,22 +36,6 @@ export default class Servis extends Component {
     if (girilenID === ID && girilenSifre === sifre) {
       this.setState({ loginInfo: { loginSuccess: true } });
     }
-  };
-  onChangeSwitch = (checked,item) => {
-    //this.setState({ switchValue: checked });
-    console.log(item)
-    console.log(checked.name)
-    //console.log(valf)
-    console.log(`switch to ${checked}`)
-    if(checked===true){
-      console.log('true')
-      //this.valfOn(valf)
-    }
-    if(checked===false){
-      console.log('false')
-      //this.valfOff(valf)
-    }
-    console.log("eventte");
   };
 
   handleChange = (event) => {
@@ -174,7 +158,7 @@ export default class Servis extends Component {
                       {this.props.activeCards.length === 0 ? (<Badge className="badges" color="warning" >Seçili Program Yok</Badge>) : ""}
                     </td>
                     <td>
-                    {this.props.activeCards.length === 0 ? "" : this.props.activeCards.map(item=><Badge key={item.programID} color="info" className="badges">{item.calismaSuresiSaat+' sa '+item.calismaSuresiDakika+' dk '+item.calismaSuresiSaniye+' sn'}</Badge>)}
+                    {this.props.activeCards.length === 0 ? "" : this.props.activeCards.map(item=><Badge key={item.programID} color="info" className="badges">{Number((item.calismaSuresiSaat*60+item.calismaSuresiDakika+item.calismaSuresiSaniye/60)*item.tekrar).toFixed(1)+' dk'}</Badge>)}
                     </td>
                     <td>
                     {this.props.activeCards.length === 0 ? "" : this.props.activeCards.map(item=><Badge key={item.programID} color="info" className="badges">..</Badge>)}  
@@ -195,22 +179,8 @@ export default class Servis extends Component {
       </Container>
       
       
-      <Container>         
+      <Container fluid={true}>         
         <Row>
-          <Col>         
-            <Table dark className="servisTable">
-              <tbody>
-                {this.state.pompalar.map(item=>
-                  <tr key={item}>
-                    <td key={item}>{item}</td>
-                    <td key={item}><Badge color="success" style={{cursor:'pointer'}} onClick={()=>this.pompaOn(item)}>RUN</Badge></td>
-                    <td key={item}><Badge color="danger" style={{cursor:'pointer'}} onClick={()=>this.pompaOff(item)}>STOP</Badge></td>
-                  </tr>
-                )}
-              </tbody>
-            </Table>
-          </Col>
-
           <Col>
             <Table dark className="servisTable">
               <tbody>
@@ -218,14 +188,28 @@ export default class Servis extends Component {
                   <tr key={item}>
                     <td key={item}>Valf</td>
                     <td key={item}>{item}</td>
-                    <td key={item}><Badge color="success" style={{cursor:'pointer'}} onClick={()=>this.valfOn(item)}>ON</Badge></td>
-                    <td key={item}><Badge color="danger" style={{cursor:'pointer'}} onClick={()=>this.valfOff(item)}>OFF</Badge></td>
-                    <td key={item}><Badge color={this.state.onValfler.find(itm=>itm===item) ? "success" : "danger"}>{"    "}</Badge></td>
+                    <td key={item}><Badge color="success" style={{cursor:'pointer'}} onClick={()=>this.valfOn(item)}>AÇ</Badge></td>
+                    <td key={item}><Badge color="danger" style={{cursor:'pointer'}} onClick={()=>this.valfOff(item)}>KAPAT</Badge></td>
+                    <td key={item}><Badge color={this.state.onValfler.find(itm=>itm===item) ? "success" : "danger"} style={{width:'80%'}}>{"    "}</Badge></td>
                     
                   </tr>
                 )}
               </tbody>
             </Table>
+          </Col>
+        </Row>
+        <Row>
+          <Col>
+          <Table dark className="servisTable">
+              <tbody>
+                <tr>
+                  <td>Pompa</td>
+                  <td><Badge color="success" style={{cursor:'pointer'}} onClick={()=>this.pompaOn()}>AÇ</Badge></td>
+                  <td><Badge color="danger" style={{cursor:'pointer'}} onClick={()=>this.pompaOff()}>KAPAT</Badge></td>
+                  <td><Badge color={this.state.pompaStatus === true ? "success" : "danger"} style={{width:'80%'}}>{"  "}</Badge></td>
+                </tr>
+              </tbody>
+            </Table>    
           </Col>
         </Row>
       </Container>
@@ -282,13 +266,41 @@ export default class Servis extends Component {
           })
     }
   }
-  pompaOn(item){
+  pompaOn(){
+    let that = this;   
+    let url = serverUrl + '/pompaOnOff'
+    let pompaStatus = {'pompaStatus':1} 
     let message = 'Çalışan program var. Bu işlemi yapamazsınız. Program durduktan sonra yeniden deneyin.'
-    this.props.runningPrograms.length > 0 ? this.props.notification('',message,'error') : alert('Valf On '+item)
+    if(this.props.runningPrograms.length > 0){
+      this.props.notification('',message,'error')
+    }
+    else{
+      axios.post(url,pompaStatus)
+          .then(function(res){
+            that.setState({pompaStatus:true})
+          })
+          .catch(function(error){
+            that.props.notification('','Modbus bağlantı hatası','error')
+          })
+    }
   }
-  pompaOff(item){
+  pompaOff(){
+    let that = this;   
+    let url = serverUrl + '/pompaOnOff'
+    let pompaStatus = {'pompaStatus':0} 
     let message = 'Çalışan program var. Bu işlemi yapamazsınız. Program durduktan sonra yeniden deneyin.'
-    this.props.runningPrograms.length > 0 ? this.props.notification('',message,'error') : alert('Valf On '+item)
+    if(this.props.runningPrograms.length > 0){
+      this.props.notification('',message,'error')
+    }
+    else{
+      axios.post(url,pompaStatus)
+          .then(function(res){
+            that.setState({pompaStatus:false})
+          })
+          .catch(function(error){
+            that.props.notification('','Modbus bağlantı hatası','error')
+          })
+    }
   }
   componentDidMount() {
     document.title = "APRA TARIM - Servis"

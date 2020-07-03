@@ -11,17 +11,15 @@ import Main from "./components/Main";
 import test from "./components/test"
 import serverUrl from './config/serverUrl'
 import axios from 'axios'
+import alertify from 'alertifyjs'
 export default class App extends Component {
   state = {
     array: [],          
     activeCards: [],
     sahaVerileri: {
-      sicaklik: "",
-      nem: "",
-      ph: "",
-      ec: "",
-      debi: "",
-      ruzgarhizi: "",
+      ph: 0,
+      ec: 0,
+      tankSeviyesi: 0,
     },
     runningPrograms:[],
     programKalanSure:0
@@ -150,18 +148,6 @@ export default class App extends Component {
       }) 
   };
   
-  randomVeriUret = ()=>{
-    setInterval(() => {
-      this.setState({sahaVerileri:{
-        //sicaklik: (15 + Math.random() * 15).toFixed(1),
-        //nem: (20 + Math.random() * 80).toFixed(1),
-        ph: (Math.random() * 14).toFixed(1),
-        ec: (Math.random() * 5).toFixed(1),
-        //debi: (Math.random() * 5).toFixed(1),
-        //ruzgarhizi: (Math.random() * 5).toFixed(1),
-      }});
-    }, 3000);
-  }
   kalanSureHesapla = ()=>{
     var interval = setInterval(() => {
       if(this.state.programKalanSure > 0){
@@ -178,8 +164,6 @@ export default class App extends Component {
     let that = this;
     let xurl = serverUrl + '/programListele'
     let yurl = serverUrl + '/aktifProgramListele'
-
-    this.randomVeriUret()
     //this.kalanSureHesapla()
     
     function programListele(){
@@ -191,19 +175,16 @@ export default class App extends Component {
     axios.all([programListele(),aktifProgramListele()])
       .then(axios.spread((xRes,yRes)=>{
         that.setState({array:xRes.data,activeCards:yRes.data})
-        this.checkRunningPrograms()
       }))
       .catch((xError,yError)=>{
+        console.log(xError)
         that.notification('','Veritabanına bağlanılamadı!','error')
       })
     
-    var interval = setInterval(() => {
-      this.checkRunningPrograms()
-      
-      // if(this.state.runningPrograms.length>0){       
-      //    clearInterval(interval)        
-      // }    
-    }, 5000);  
+     setInterval(() => {
+      this.anlikDegerleriOku()
+      this.checkRunningPrograms()            
+    }, 2000);  
   }
 
   checkRunningPrograms=()=>{
@@ -218,6 +199,27 @@ export default class App extends Component {
       that.setState({runningPrograms:res.data,programKalanSure:sure})
     })
     .catch(err=>console.log(err))
+  }
+  
+  anlikDegerleriOku=()=>{
+    let that = this;
+    let tankSeviyesi = 0;
+    let ph = 0;
+    let ec = 0;
+    let aurl = serverUrl + '/anlikVeriCek'
+    axios.get(aurl)
+    .then(res=>{
+        ph = Number((res.data[0]/100).toFixed(2))  
+        ec = Number((res.data[1]/100).toFixed(1))
+        tankSeviyesi = Number(((res.data[2]*100)/4095).toFixed(1))
+        that.setState({sahaVerileri:{
+          ...that.state.sahaVerileri,
+          tankSeviyesi,ph,ec
+        }});
+    })
+    .catch(err=>{
+        that.alertifyNotification('Modbus bağlantı hatası')
+    })
   }
   
   notification=(item,message,type)=>{
@@ -239,6 +241,11 @@ export default class App extends Component {
     }
   }
 
+  alertifyNotification = (message) =>{
+    let title="HATA"
+    alertify.alert(title, message);
+  }
+
   render() {
     const { array, activeCards,sahaVerileri,runningPrograms,programKalanSure } = this.state;
     return (
@@ -252,7 +259,8 @@ export default class App extends Component {
               runningPrograms={runningPrograms}
               programKalanSure ={programKalanSure} 
               sahaVerileri={sahaVerileri}
-              passiveButton={this.passiveButton}                        
+              passiveButton={this.passiveButton}
+              notification={this.notification}                        
             ></CalismaEkrani>
           </Route>
 

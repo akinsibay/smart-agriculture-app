@@ -1,4 +1,4 @@
 var ip = require('ip')
 let pcIP = ip.address()
-const serverUrl = 'http://'+pcIP+':3001'
+const serverUrl = 'http://192.168.1.63:3001'
 export default serverUrl

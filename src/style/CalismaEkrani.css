@@ -38,17 +38,18 @@
 }
 .suHazirlama .tankSeviye{
     padding-top: 15px;
-    font-size: 28px;
+    font-size: 30px;
 }
 .suHazirlama .progressDiv{
     text-align: center;
-    font-size: 24px;
+    font-size: 36px;
+    color:black;
     position: relative;
-    top:7px;
+    top:12px;
 }
 .suHazirlama .progress{
     margin-top: -15px;
-    height: 25px;
+    height: 40px;
 }
 /* TABLE 3 */
 
@@ -85,10 +86,10 @@
 
 .sulamaProgrami .progressDiv{
     text-align: center;
-    font-size: 28px;
+    font-size: 36px;
     color:black;
     position: relative;
-    top:30px;
+    top:15px;
 }
 
 .bgImage .acilStop{

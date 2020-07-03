@@ -4,6 +4,10 @@ let timers={} //zaman intervaller objesi
 let suSeviyesi = 0;
 let seviyeKontrolInterval,ecPhKontrolInterval;
 let pg = require("pg");
+let axios = require('axios')
+let ip = require('ip')
+let pcIP = ip.address()
+const serverUrl = 'http://'+pcIP+':3001'
 const deviceIP = require("./src/config/deviceIP");
 let pool = new pg.Pool({
   port: 5432,
@@ -15,6 +19,7 @@ let pool = new pg.Pool({
 
 var ModbusRTU = require("modbus-serial");
 var wise = new ModbusRTU(); 
+var omnicon = new ModbusRTU(); 
 
 function run(kart){     
     var id = kart.id || kart.programID
@@ -29,7 +34,7 @@ function run(kart){
             if (suankiSaat === kart._baslamaZamani) {
                 console.log("basladi kart id:",kart.id || kart.programID );
                 clearInterval(timers['no'+id])
-                wiseConnect(kart)
+                deviceConnect(kart)
                              
             } else {
                 console.log("su hazırlama saat gelmedi kart id:",kart.id || kart.programID);
@@ -41,15 +46,25 @@ function run(kart){
         }, 2000);   
 }
 
-function wiseConnect(kart){
-    wise.connectTCP(deviceIP.wiseIP,{port:502})
-    .then(res=>{
-        setTimeout(() => {
-            console.log('wise connection OK')
-            wiseRun(kart)   //wiseyi bu valf bilgileriyle sür 
-        }, 1000);       
-    })             
-    .catch(error=>{console.log(error)})
+function deviceConnect(kart){
+    if(!wise.isOpen || !omnicon.isOpen){
+        wise.connectTCP(deviceIP.wiseIP,{port:502})
+        .then(res=>{
+            omnicon.connectTCP(deviceIP.omniconIP,{port:502})
+            .then(res=>{
+                setTimeout(() => {
+                    console.log('\x1b[33m','device connection OK')
+                    processRun(kart)   //wiseyi bu valf bilgileriyle sür 
+                }, 1000);
+            })
+            .catch(err=>console.log(err))              
+        })             
+        .catch(error=>{console.log(error)})
+    }
+    else{
+        processRun(kart)
+    }
+    
 }
 
 function stop(kart){
@@ -70,13 +85,15 @@ function stop(kart){
     console.log('aktif kartlar:',aktifKartlar)  
 }
 
-function wiseRun(kart){ 
+function processRun(kart){ 
     omniconSetGonder(kart,function(){
         valf1Ac(kart,function(){
-            suSeviyeKontrol(function(){valf3Ac()},function(){valf1Kapat(function(){
+            suSeviyeKontrol(function(){valf3Ac(function(){motorStart()})},function(){valf1Kapat(function(){
                 valf3Kapat(function(){
-                    ecPhKontrol(kart,function(){
-                        sulamayaBasla(kart)
+                    motorStop(function(){
+                        ecPhKontrol(kart,function(){
+                            sulamayaBasla(kart)
+                        })
                     })
                 })
             })})
@@ -85,13 +102,17 @@ function wiseRun(kart){
 }
 
 function omniconSetGonder(kart,cbValf1Ac){
-    var phSet = kart._phSet
-    var ecSet = kart._ecSet
+    var phSet = Number(kart._phSet)
+    var ecSet = Number(kart._ecSet)
     console.log('Omnicona gönderilen PH:'+phSet+' EC:'+ecSet)
-    wise.readInputRegisters(1,1)
+    omnicon.writeRegisters(7,[phSet*100])
     .then(res=>{
-        console.log(res.data)
-        cbValf1Ac()   
+        omnicon.writeRegisters(10,[ecSet*100])
+        .then(res=>{
+            console.log('Omnicona set değerleri yazıldı')
+            cbValf1Ac() 
+        })
+        .catch(err=>console.log(err))         
     })
     .catch(err=>console.log(err))
 }
@@ -108,10 +129,8 @@ function valf1Ac(kart,suSeviyeKontrol){
 }
 
 function suSeviyeKontrol(cbValf3Ac,cbValf1Kapat){
-    //var sensorLimit = 0
     console.log('Sensör bilgisi okunuyor..')
     seviyeKontrolInterval = setInterval(() => {
-        //sensorLimit+=1
         wise.readInputRegisters(0,1)
         .then(res=>{
             console.log('Limit: '+res.data[0])
@@ -120,11 +139,11 @@ function suSeviyeKontrol(cbValf3Ac,cbValf1Kapat){
                 console.log('Tank %20 seviyesine kadar dolduruluyor..')
             }
             if(res.data[0]>=100){
-                console.log('Tank %20de. Valf 3 açılıyor..')                
+                console.log('\x1b[33m','Tank %20de. Valf 3 açılıyor..')                
                 cbValf3Ac()               
             }
-            if(res.data[0]>=400){
-                console.log('Tank doldu. Valf 1 kapatılıyor..')                
+            if(res.data[0]>=350){
+                console.log('\x1b[33m','Tank doldu. Valf 1 kapatılıyor..')                
                 cbValf1Kapat(valf3Kapat)
                 clearInterval(seviyeKontrolInterval)               
             }        
@@ -143,23 +162,38 @@ function valf1Kapat(cbValf3Kapat){
     .catch(err=>console.log(err))
 }
 
-function valf3Ac(){
+function valf3Ac(cbMotorStart){
     console.log('Valf3 açılıyor su karıştırılıyor..')
     wise.writeCoil(18,1)
     .then(res=>{
         console.log('Valf 3 açıldı')
-        //ve motor start   
+        cbMotorStart()   
+    })
+    .catch(err=>console.log(err))
+}
+function motorStart(){
+    wise.writeCoil(19,1)
+    .then(res=>{
+        console.log('Motor çalıştırıldı')  
     })
     .catch(err=>console.log(err))
 }
 
-function valf3Kapat(cbEcPhKontrol){
+function valf3Kapat(cbMotorStop){
     console.log('Valf3 kapatılıyor motor durduruluyor..')
     wise.writeCoil(18,0)
     .then(res=>{
         console.log('Valf 3 kapatıldı')
-        cbEcPhKontrol()
-        //ve motor start   
+        cbMotorStop()          
+    })
+    .catch(err=>console.log(err))
+}
+function motorStop(cbEcPhKontrol){
+    console.log('Valf3 kapatılıyor motor durduruluyor..')
+    wise.writeCoil(19,0)
+    .then(res=>{
+        console.log('Motor durduruldu')
+        cbEcPhKontrol()  
     })
     .catch(err=>console.log(err))
 }
@@ -167,17 +201,24 @@ function valf3Kapat(cbEcPhKontrol){
 function ecPhKontrol(kart,cbSulamayaBasla){
     var phSet = kart._phSet
     var ecSet = kart._ecSet
+    var phSetUp = phSet+0.1
+    var phSetDown = phSet-0.1
+    var ecSetUp = ecSet+0.1
+    var ecSetDown = ecSet-0.1
     console.log('PH Set:'+phSet)
     console.log('EC Set:'+ecSet)
-    var olcum =0;
+    //var olcum =0;
     console.log('Omnicondan ph ec set değere ulaştı mı diye sorgulanıyor..')
     ecPhKontrolInterval = setInterval(() => {
-        olcum+=1
-        console.log(olcum)
-        wise.readInputRegisters(1,2) //quantity 2 çünkü ec ph tek sorguda dizi gelsin istedim
+        //olcum+=1
+        //console.log(olcum)
+        omnicon.readHoldingRegisters(0,2) //quantity 2 çünkü ec ph tek sorguda dizi gelsin istedim
         .then(res=>{
-            console.log(res.data)
-            if(olcum >= phSet && olcum >=ecSet){
+            var ph = res.data[0]/100
+            var ec = res.data[1]/100
+            console.log(ph)
+            console.log(ec)           
+            if(((ph >= phSetDown) && (ph<=phSetUp)) && ((ec >= ecSetDown) && (ec<=ecSetUp))){
                 console.log('ph ec ayarlandı valf 2 açılıyor..')
                 clearInterval(ecPhKontrolInterval)
                 cbSulamayaBasla()
@@ -211,7 +252,6 @@ function sulamayaBasla(kart){
 }
 
 function calisiyorBilgisiEkle(kart){
-    console.log(kart)
     let {programAdi,_calismaSuresi,_beklemeSuresi,_tekrar,_gunler,_baslamaZamani,_phSet,_ecSet,_valfler} = kart
     pool.connect((err, db, done) => {
       if (err) {
@@ -256,15 +296,21 @@ function calisiyorBilgisiSil(kart){
     });
 }
 
-function anlikSuSeviyeKontrol(){
-    setInterval(() => {
-        wise.readInputRegisters(2,1)
+function anlikVeriler(){
+    let zurl = serverUrl + '/anlikVeriCek'
+    setInterval(() => { 
+        console.log('Su seviyesi:'+suSeviyesi)  
+        axios.get(zurl)
         .then(res=>{
-           suSeviyesi = res.data[0]   
+            suSeviyesi = Number(((res.data[2]*100)/4095).toFixed(1))          
         })
-        .catch(err=>console.log(err)) 
+        .catch(err=>{
+            console.log(err)
+        })
     }, 5000);
 }
+
+anlikVeriler()
 
 function butunCikislarOFF(){
     wise.writeCoil(16,0)
@@ -274,7 +320,12 @@ function butunCikislarOFF(){
         .then(res=>{
             console.log('Valf 2 kapatıldı')
             wise.writeCoil(18,0)
-            .then(res=>console.log('Valf 3 kapatıldı'))
+            .then(res=>{
+                console.log('Valf 3 kapatıldı')
+                wise.writeCoil(19,0)
+                .then(res=>console.log('Motor durduruldu'))
+                .catch(err=>console.log(err))
+            })
             .catch(err=>console.log(err))
         })
         .catch(err=>console.log(err))
@@ -282,12 +333,14 @@ function butunCikislarOFF(){
     .catch(err=>console.log(err))
 }
 
+
 exports.run = run
 exports.stop = stop
 exports.valf2Ac = valf2Ac
 exports.valf2Kapat = valf2Kapat
 exports.calisiyorBilgisiEkle = calisiyorBilgisiEkle
 exports.calisiyorBilgisiSil = calisiyorBilgisiSil
-exports.anlikSuSeviyeKontrol = anlikSuSeviyeKontrol
-exports.wiseConnect = wiseConnect
+exports.anlikVeriler = anlikVeriler
+exports.deviceConnect = deviceConnect
+exports.butunCikislarOFF = butunCikislarOFF
 exports.suSeviyesi = suSeviyesi

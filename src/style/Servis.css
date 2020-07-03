@@ -5,6 +5,7 @@
 
 .servisTable tbody tr{
     border:none;
+    font-size: 36px;
 }
 .servisTable thead th{
     border:none;
@@ -13,7 +14,7 @@
 
 
 .servisTable{
-    margin-top: 25px;
+    margin-top: 5px;
     border-radius: 12px;
     border:none
 }

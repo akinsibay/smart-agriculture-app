@@ -15,6 +15,8 @@ import { Container, Row, Col, Badge, Button, Table,Progress } from "reactstrap";
 // import Thermometer from 'react-thermometer-ecotropy'
 // import ReactSpeedometer from "react-d3-speedometer"
 import alertify from 'alertifyjs'
+import serverUrl from '../config/serverUrl'
+import axios from 'axios'
 export default class CalismaEkrani extends Component {
 
   activeProgramBadgeJSX = (item,index) => {
@@ -59,7 +61,15 @@ export default class CalismaEkrani extends Component {
                     ()=>alertify.error('İşlem iptal edildi'))
   };
   acildurus = () => {
-    alert("acil durduruldu");
+    let that = this;
+    let zurl = serverUrl + '/acilStop'
+    axios.get(zurl)
+      .then(res=>{
+        that.props.notification('','Acil Durduruldu','success')
+      })
+      .catch(err=>{
+        that.props.notification('Modbus bağlantı hatası')
+      })
   };
 
   kalanSure = ()=>{  
@@ -69,7 +79,7 @@ export default class CalismaEkrani extends Component {
           
   }
   tablesJSX=()=>{
-    const { ph, ec } = this.props.sahaVerileri;
+    const { ph, ec,tankSeviyesi } = this.props.sahaVerileri;
     const {runningPrograms} = this.props;
     return(
       <Container fluid={true}>
@@ -101,7 +111,7 @@ export default class CalismaEkrani extends Component {
                       {this.props.activeCards.length === 0 ? (<Badge className="badges" color="warning" >Seçili Program Yok</Badge>) : ""}
                     </td>
                     <td>
-                    {this.props.activeCards.length === 0 ? "" : this.props.activeCards.map((item,index)=><Badge key={index} color="info" className="badges">{item.calismaSuresiSaat+' sa '+item.calismaSuresiDakika+' dk '+item.calismaSuresiSaniye+' sn'}</Badge>)}
+                    {this.props.activeCards.length === 0 ? "" : this.props.activeCards.map((item,index)=><Badge key={index} color="info" className="badges">{Number((item.calismaSuresiSaat*60+item.calismaSuresiDakika+item.calismaSuresiSaniye/60)*item.tekrar).toFixed(1)+' dk'}</Badge>)}
                     </td>
                     <td>
                       {this.props.activeCards.length === 0 ? "" : this.kalanSure()}  
@@ -162,7 +172,7 @@ export default class CalismaEkrani extends Component {
                           //   strokeLinecap: "butt", //kenarlar oval veya düz
                           trailColor: "#eee", //boş kalan kısım rengi #3E98C7
                           backgroundColor:'#4b6584',
-                          textSize:'30px',
+                          textSize:'26px',
                           pathColor:
                             ph > 10
                               ? "red"
@@ -189,7 +199,7 @@ export default class CalismaEkrani extends Component {
                           //   strokeLinecap: "butt", //kenarlar oval veya düz
                           trailColor: "#eee", //boş kalan kısım rengi #3E98C7
                           backgroundColor:'#4b6584',
-                          textSize:'30px',
+                          textSize:'26px',
                           pathColor:
                             ec > 4.7
                               ? "red"
@@ -209,8 +219,8 @@ export default class CalismaEkrani extends Component {
                   <tr>
                     <td className="tankSeviye">Tank Seviye</td>
                     <td>
-                      <div className="progressDiv">75%</div>
-                      <Progress striped className="progress" value="75" />
+                      <div className="progressDiv">%{tankSeviyesi}</div>
+                      <Progress striped className="progress" value={tankSeviyesi} />
                     </td>
                   </tr>
                 </tbody>
