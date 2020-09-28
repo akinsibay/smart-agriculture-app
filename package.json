@@ -1,4 +1,5 @@
 {
+  "homepage": "./",
   "name": "cardgui",
   "version": "0.1.0",
   "private": true,
@@ -15,7 +16,9 @@
     "express": "^4.17.1",
     "ip": "^1.1.5",
     "modbus-serial": "^8.0.0",
+    "moment": "^2.27.0",
     "morgan": "^1.10.0",
+    "nodemailer": "^6.4.10",
     "pg": "^8.2.1",
     "react": "^16.13.1",
     "react-circular-progressbar": "^2.0.3",

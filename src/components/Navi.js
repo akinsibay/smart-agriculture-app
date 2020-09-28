@@ -2,15 +2,16 @@ import React, { Component } from "react";
 import { Menu } from "antd";
 import {
   ExperimentOutlined,
-  SettingOutlined,
-  // AreaChartOutlined,
+  FileDoneOutlined,
   DashboardOutlined,
-  ControlOutlined
+  ControlOutlined,
+  SettingOutlined
 } from "@ant-design/icons";
 import '../style/Navi.css'
 import {Link} from 'react-router-dom'
-
+import logo from "../assets/apralogo.jpg";
 export default class Navi extends Component {
+  
   state = {
     current: '',
   };
@@ -22,6 +23,10 @@ export default class Navi extends Component {
     });
   };
   render() {
+    const imgStyle = {
+      height:'%1',
+      width:'%20'
+    };
     return (
       <div>       
         <Menu
@@ -32,14 +37,14 @@ export default class Navi extends Component {
         >
           <Menu.Item key="mail"  className="decoration">
             <ExperimentOutlined style={{fontSize:'36px'}}/>
-            <Link to='/calismaekrani'>Çalışma Ekranı</Link>        
+            <Link to='/calismaekrani'>Ana Sayfa</Link>        
           </Menu.Item>
           
           <Menu.Item/>
           
           <Menu.Item key="programlar" className="decoration">
             <DashboardOutlined style={{fontSize:'36px'}} />
-            <Link to='/programlar'>Programlar</Link>
+            <Link to='/programlar'>Otomatik Sulama</Link>
           </Menu.Item>
           
           <Menu.Item/>
@@ -53,9 +58,15 @@ export default class Navi extends Component {
 
           <Menu.Item key="servis"  className="decoration">
            <ControlOutlined style={{fontSize:'36px'}}/>
-            <Link to='/servis'>Servis</Link>
+            <Link to='/servis'>Manuel İşlemler</Link>
           </Menu.Item>
 
+          <Menu.Item/>
+
+          <Menu.Item key="rapor"  className="decoration">
+           <FileDoneOutlined style={{fontSize:'36px'}}/>
+            <Link to='/rapor'>Sulama Geçmişi</Link>
+          </Menu.Item>
           <Menu.Item/>
           
           <Menu.Item key="ayarlar"  className="decoration">
@@ -65,7 +76,7 @@ export default class Navi extends Component {
 
           <Menu.Item className="decoration" style={{float:'right'}}>
           {/* eslint-disable-next-line */}
-          <a href="https://www.apradanismanlik.com" target="_blank"  rel="noopener" >APRA Mühendislik</a>
+          <a href="https://www.apradanismanlik.com" target="_blank"  rel="noopener" ><img src={logo} alt="alt" class="center" style={imgStyle} /></a>
           </Menu.Item>
         </Menu>
       </div>

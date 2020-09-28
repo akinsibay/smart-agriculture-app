@@ -18,7 +18,7 @@ import {
   CardSubtitle
 } from "reactstrap";
 import { Modal, Message } from "semantic-ui-react";
-import { SettingOutlined } from "@ant-design/icons";
+import { SettingOutlined,FormOutlined,DeleteOutlined,CheckOutlined,CloseOutlined } from "@ant-design/icons";
 import svg from "../assets/unnamed.jpg";
 import '../style/Programlar.css'
 import alertify from 'alertifyjs'
@@ -42,7 +42,9 @@ export default class Programlar extends Component {
       valf1:null,valf2:true,valf3:null,valf4:null,valf5:null,valf6:null,valf7:null,valf8:null,
       pazartesi:null,sali:null,carsamba:null,persembe:null,cuma:null,cumartesi:null,pazar:null,
       suankiValfler:[],
-      suankiGunler:[]
+      suankiGunler:[],
+      sirkulasyonSeviyesi:20,
+      dolmaSeviyesi:100
     },
   };
 
@@ -64,6 +66,8 @@ export default class Programlar extends Component {
       ecSet: gelen.ecSet,
       suankiValfler:gelen.Valfler !== null ? gelen.Valfler.valf : [],
       suankiGunler:gelen.Gunler !== null ? gelen.Gunler.gun : [],
+      sirkulasyonSeviyesi:gelen.sirkulasyonSeviye,
+      dolmaSeviyesi:gelen.dolmaSeviye
     }});       
   };
 
@@ -95,18 +99,61 @@ export default class Programlar extends Component {
   };
 
   editProgramButton = (item) => {
-    console.log(item)
-    this.editModalOpen();
-    this.showProgramInfo(item);
+    //console.log(item)
+    if(this.props.activeCards.find(itm=>itm.programID === item.id)){
+      this.props.notification('','Program aktifken düzenleme yapamazsınız.','error')
+    }
+    else{
+      this.editModalOpen();
+      this.showProgramInfo(item);
+    }  
   };
 
   deleteProgramButton = (item)=>{
     let title="PROGRAM SİLME"
     let message=item.programAdi+' programını silmek istediğinize emin misiniz? \nDİKKAT! Bu işlem geri alınamaz!'
+    if(this.props.activeCards.find(itm=>itm.programID === item.id)){
+      this.props.notification('','Program aktifken silme işlemi yapamazsınız.','error')
+    }
+    else{
+      alertify.confirm(title, message, 
+        ()=>this.props.deleteData(item),
+        ()=>alertify.error('İşlem iptal edildi'))
+    } 
     
-    alertify.confirm(title, message, 
-                    ()=>this.props.deleteData(item),
-                    ()=>alertify.error('İşlem iptal edildi'))
+  }
+  activeButton = (item) =>{
+    let title="PROGRAM AKTİFLEŞTİRME"
+    let message=item.programAdi+' programını aktif etmek üzeresiniz. Bunu yaptığınızda saat '+item.baslamaSaat+' olduğunda otomatik sulama programı başlayacak ve girmiş olduğunuz parametrelere göre sulama yapılacak. Emin misiniz?'
+    if(this.props.activeCards.length===0){
+      if(this.props.activeCards.find(itm=>itm.programID === item.id)){
+        this.props.notification('','Program zaten aktif durumda.','error')
+      }
+      else{
+        alertify.confirm(title, message, 
+          ()=>this.props.activeButton(item),
+          ()=>alertify.error('İşlem iptal edildi'))
+      }
+    }
+    else{
+      this.props.notification('','Aynı anda tek bir program aktif edebilirsiniz. Bunu aktif etmek için diğer programı pasif yapınız.','error')
+    }
+      
+    
+  }
+  passiveButton = (item) =>{
+    let title="PROGRAM PASİFLEŞTİRME"
+    let message=item.programAdi+' programını pasif etmek üzeresiniz. Bunu yaptığınızda program duracak ve otomatik sulama siz yeniden başlatana dek devam etmeyecek. Emin misiniz?'
+    if(!this.props.activeCards.find(itm=>itm.programID === item.id)){
+      this.props.notification('','Program zaten pasif durumda.','error')
+    }
+    else{
+      alertify.confirm(title, message, 
+        ()=>this.props.passiveButton(item),
+        ()=>alertify.error('İşlem iptal edildi'))
+    }
+    
+   
   }
 
   saveButton = () => {
@@ -123,7 +170,8 @@ export default class Programlar extends Component {
       phSet,
       ecSet,
       valf1,valf2,valf3,valf4,valf5,valf6,valf7,valf8,
-      pazartesi,sali,carsamba,persembe,cuma,cumartesi,pazar    
+      pazartesi,sali,carsamba,persembe,cuma,cumartesi,pazar,
+      sirkulasyonSeviyesi,dolmaSeviyesi    
     } = this.state.cardInfo;
 
     let newObject = {
@@ -140,11 +188,28 @@ export default class Programlar extends Component {
       phSet: phSet,
       ecSet: ecSet,
       valf1,valf2,valf3,valf4,valf5,valf6,valf7,valf8,
-      pazartesi,sali,carsamba,persembe,cuma,cumartesi,pazar
+      pazartesi,sali,carsamba,persembe,cuma,cumartesi,pazar,
+      sirkulasyonSeviyesi,dolmaSeviyesi
     };
 
     if(!pazartesi && !sali && !carsamba && !persembe && !cuma && !cumartesi && !pazar){
       this.props.notification('','Program eklenemedi : Gün seçmediniz!','error')
+    }
+    else if(phSet > 14 || phSet < 0){
+      this.props.notification('','Program eklenemedi: PH değeri 0 ile 14 arasında olmalıdır!')
+    }
+    else if(ecSet < 0 || ecSet > 10000){
+      this.props.notification('','Program eklenemedi: EC değeri 0 ile 10 bin arasında olmalıdır!')
+    }
+
+    else if(calismaSuresiSaat > 24 || calismaSuresiDakika > 60 || calismaSuresiSaniye > 60){
+      this.props.notification('','Çalışma süreleri istenen istenen aralıklarda değil!')
+    }
+    else if(beklemeSuresiSaat > 24 || beklemeSuresiDakika > 60 || beklemeSuresiSaniye > 60){
+      this.props.notification('','Bekleme süreleri istenen istenen aralıklarda değil!')
+    }
+    else if(Number(sirkulasyonSeviyesi)>Number(dolmaSeviyesi)){
+      this.props.notification('','Program eklenemedi! : Dolum seviyesi sirkülasyon seviyesinden az olamaz!','error')
     }
     else{
       this.props.addData(newObject); 
@@ -152,12 +217,47 @@ export default class Programlar extends Component {
   };
 
   editProgram = ()=>{
-    const {pazartesi,sali,carsamba,persembe,cuma,cumartesi,pazar} = this.state.cardInfo; 
-
+    //const {pazartesi,sali,carsamba,persembe,cuma,cumartesi,pazar,sirkulasyonSeviyesi,dolmaSeviyesi} = this.state.cardInfo; 
+    const {
+      programAdi,
+      baslamaSaat,
+      calismaSuresiSaat,
+      calismaSuresiDakika,
+      calismaSuresiSaniye,
+      beklemeSuresiSaat,
+      beklemeSuresiDakika,
+      beklemeSuresiSaniye,
+      tekrar,
+      phSet,
+      ecSet,
+      valf1,valf2,valf3,valf4,valf5,valf6,valf7,valf8,
+      pazartesi,sali,carsamba,persembe,cuma,cumartesi,pazar,
+      sirkulasyonSeviyesi,dolmaSeviyesi    
+    } = this.state.cardInfo;
+    console.log(sirkulasyonSeviyesi)
+    console.log(dolmaSeviyesi)
     if(!pazartesi && !sali && !carsamba && !persembe && !cuma && !cumartesi && !pazar){
       this.props.notification('','Program düzenlenemedi! : Gün seçmediniz!','error')
     }
+    else if(phSet > 14 || phSet < 0){
+      this.props.notification('','Program eklenemedi: PH değeri 0 ile 14 arasında olmalıdır!')
+    }
+    else if(ecSet < 0 || ecSet > 10000){
+      this.props.notification('','Program eklenemedi: EC değeri 0 ile 10 bin arasında olmalıdır!')
+    }
+
+    else if(calismaSuresiSaat > 24 || calismaSuresiDakika > 60 || calismaSuresiSaniye > 60){
+      this.props.notification('','Çalışma süreleri istenen istenen aralıklarda değil!')
+    }
+    else if(beklemeSuresiSaat > 24 || beklemeSuresiDakika > 60 || beklemeSuresiSaniye > 60){
+      this.props.notification('','Bekleme süreleri istenen istenen aralıklarda değil!')
+    }
+    else if(Number(sirkulasyonSeviyesi)>Number(dolmaSeviyesi)){
+      this.props.notification('','Program düzenlenemedi! : Dolum seviyesi sirkülasyon seviyesinden az olamaz!','error')
+    }
     else{
+      console.log('edit program func')
+      console.log(this.state.cardInfo)
       this.props.editData(this.state.cardInfo)
     }  
   }
@@ -169,11 +269,10 @@ export default class Programlar extends Component {
         color="success"
         style={{
           fontSize: "22px",
-          marginLeft: "5px",
-          float: "right",
+          margin: "7px",
         }}
       >
-        {item.programAdi}
+        {item.programAdi+' programı çalışıyor'}
       </Badge>
     );
   };
@@ -202,6 +301,7 @@ export default class Programlar extends Component {
       ecSet,
       // suankiValfler,
       suankiGunler,
+      sirkulasyonSeviyesi,dolmaSeviyesi
     } = this.state.cardInfo;
     
       return(
@@ -228,14 +328,14 @@ export default class Programlar extends Component {
                       <FormGroup row>
                         <Label
                           for="programAdi"
-                          style={{ fontSize: "24px" }}
+                          style={{ fontSize: "2vh" }}
                           xs={5}
                         >
                           Program Adı
                         </Label>
                         <Col xs={7}>
                           <Input
-                            style={{ fontSize: "20px" }}
+                            style={{ fontSize: "2vh" }}
                             name="programAdi"
                             value={programAdi}
                             id="exampleEmail"
@@ -248,14 +348,14 @@ export default class Programlar extends Component {
                       <FormGroup row>
                         <Label
                           for="dateTime"
-                          style={{ fontSize: "24px" }}
+                          style={{ fontSize: "2vh" }}
                           xs={5}
                         >
                           Başlama Zamanı
                         </Label>
                         <Col xs={7}>
                           <input
-                            style={{ fontSize: "20px" }}
+                            style={{ fontSize: "2vh" }}
                             type="time"
                             name="baslamaSaat"
                             value={baslamaSaat}
@@ -267,7 +367,7 @@ export default class Programlar extends Component {
                       <FormGroup row>
                         <Label
                           for="calismaSuresi"
-                          style={{ fontSize: "22px" }}
+                          style={{ fontSize: "2vh" }}
                           xs={5}
                         >
                           Çalışma Süresi (sa/dk/sn)
@@ -275,7 +375,10 @@ export default class Programlar extends Component {
                         <Col xs={2}>
                           <Input
                             type="number"
-                            style={{ fontSize: "20px" }}
+                            step={1}
+                            min={0}
+                            max={24}
+                            style={{ fontSize: "2vh" }}
                             name="calismaSuresiSaat"
                             value={calismaSuresiSaat}
                             id="exampleEmail"
@@ -287,7 +390,10 @@ export default class Programlar extends Component {
                         <Col xs={3}>
                           <Input
                             type="number"
-                            style={{ fontSize: "20px" }}
+                            step={1}
+                            min={0}
+                            max={60}
+                            style={{ fontSize: "2vh" }}
                             name="calismaSuresiDakika"
                             value={calismaSuresiDakika}
                             id="exampleEmail"
@@ -299,7 +405,10 @@ export default class Programlar extends Component {
                         <Col xs={2}>
                           <Input
                             type="number"
-                            style={{ fontSize: "20px" }}
+                            step={1}
+                            min={0}
+                            max={60}
+                            style={{ fontSize: "2vh" }}
                             name="calismaSuresiSaniye"
                             value={calismaSuresiSaniye}
                             id="exampleEmail"
@@ -312,7 +421,7 @@ export default class Programlar extends Component {
                       <FormGroup row>
                         <Label
                           for="beklemeSuresi"
-                          style={{ fontSize: "22px" }}
+                          style={{ fontSize: "2vh" }}
                           xs={5}
                         >
                           Bekleme Süresi (sa/dk/sn)
@@ -320,7 +429,10 @@ export default class Programlar extends Component {
                         <Col xs={2}>
                           <Input
                             type="number"
-                            style={{ fontSize: "20px" }}
+                            step={1}
+                            min={0}
+                            max={24}
+                            style={{ fontSize: "2vh" }}
                             name="beklemeSuresiSaat"
                             value={beklemeSuresiSaat}
                             id="exampleEmail"
@@ -332,7 +444,10 @@ export default class Programlar extends Component {
                         <Col xs={3}>
                           <Input
                             type="number"
-                            style={{ fontSize: "20px" }}
+                            step={1}
+                            min={0}
+                            max={60}
+                            style={{ fontSize: "2vh" }}
                             name="beklemeSuresiDakika"
                             value={beklemeSuresiDakika}
                             id="exampleEmail"
@@ -344,7 +459,10 @@ export default class Programlar extends Component {
                         <Col xs={2}>
                           <Input
                             type="number"
-                            style={{ fontSize: "20px" }}
+                            step={1}
+                            min={0}
+                            max={60}
+                            style={{ fontSize: "2vh" }}
                             name="beklemeSuresiSaniye"
                             value={beklemeSuresiSaniye}
                             id="exampleEmail"
@@ -355,13 +473,14 @@ export default class Programlar extends Component {
                         </Col>
                       </FormGroup>
                       <FormGroup row>
-                        <Label for="tekrar" style={{ fontSize: "24px" }} xs={5}>
+                        <Label for="tekrar" style={{ fontSize: "2vh" }} xs={5}>
                           Tekrar
                         </Label>
                         <Col xs={7}>
                           <Input
                             type="number"
-                            style={{ fontSize: "20px" }}
+                            min={0}
+                            style={{ fontSize: "2vh" }}
                             name="tekrar"
                             value={tekrar}
                             id="exampleEmail"
@@ -372,13 +491,16 @@ export default class Programlar extends Component {
                         </Col>
                       </FormGroup>
                       <FormGroup row>
-                        <Label for="tekrar" style={{ fontSize: "24px" }} xs={5}>
+                        <Label for="tekrar" style={{ fontSize: "2vh" }} xs={5}>
                           PH Set
                         </Label>
                         <Col xs={7}>
                           <Input
                             type="number"
-                            style={{ fontSize: "20px" }}
+                            step={0.01}
+                            min={0}
+                            max={14}
+                            style={{ fontSize: "2vh" }}
                             name="phSet"
                             value={phSet}
                             id="exampleEmail"
@@ -389,14 +511,17 @@ export default class Programlar extends Component {
                         </Col>
                       </FormGroup>
                       <FormGroup row>
-                        <Label for="tekrar" style={{ fontSize: "24px" }} xs={5}>
+                        <Label for="tekrar" style={{ fontSize: "2vh" }} xs={5}>
                           EC Set
                         </Label>
                         <Col xs={7}>
                           <Input
                             type="number"
-                            style={{ fontSize: "20px" }}
+                            style={{ fontSize: "2vh" }}
                             name="ecSet"
+                            step={0.01}
+                            min={0}
+                            max={10000}
                             value={ecSet}
                             id="exampleEmail"
                             placeholder="ec set değerini giriniz"
@@ -406,7 +531,7 @@ export default class Programlar extends Component {
                         </Col>
                       </FormGroup>
                       <FormGroup row>
-                      <Label for="valf" style={{ fontSize: "24px" }} xs={5}>
+                      <Label for="valf" style={{ fontSize: "2vh" }} xs={5}>
                         Valf 
                       {/* <p><Badge>{'Önceki Seçim->'}</Badge>{suankiValfler.length===0 ? <Badge color="warning">SEÇİM YOK</Badge> : suankiValfler.map((item,index)=>(<Badge key={index} color="info" style={{marginRight:'2px'}}>{item}</Badge>))}</p> */}
                         </Label>
@@ -414,16 +539,16 @@ export default class Programlar extends Component {
                         <input name="valf1" type="checkbox" onClick={this.onChangeSwitch}  disabled={true}/><Label className="checkboxLabel">Valf-1</Label>
                         <input name="valf2" type="checkbox" onClick={this.onChangeSwitch}  checked={true}/><Label className="checkboxLabel">Valf-2</Label>
                         <input name="valf3" type="checkbox" onClick={this.onChangeSwitch}  disabled={true}/><Label className="checkboxLabel">Valf-3</Label>
-                        <input name="valf4" type="checkbox" onClick={this.onChangeSwitch}  disabled={true}/><Label className="checkboxLabel">Valf-4</Label>
+                        {/* <input name="valf4" type="checkbox" onClick={this.onChangeSwitch}  disabled={true}/><Label className="checkboxLabel">Valf-4</Label>
                         <input name="valf5" type="checkbox" onClick={this.onChangeSwitch}  disabled={true}/><Label className="checkboxLabel">Valf-5</Label>
                         <input name="valf6" type="checkbox" onClick={this.onChangeSwitch}  disabled={true}/><Label className="checkboxLabel">Valf-6</Label>
                         <input name="valf7" type="checkbox" onClick={this.onChangeSwitch}  disabled={true}/><Label className="checkboxLabel">Valf-7</Label>
-                        <input name="valf8" type="checkbox" onClick={this.onChangeSwitch}  disabled={true}/><Label className="checkboxLabel">Valf-8</Label>
+                        <input name="valf8" type="checkbox" onClick={this.onChangeSwitch}  disabled={true}/><Label className="checkboxLabel">Valf-8</Label> */}
                         </Col>
                     </FormGroup>
                       
-                    <FormGroup row>
-                      <Label for="günler" style={{fontSize:"24px"}} xs={5}>
+                      <FormGroup row>
+                      <Label for="günler" style={{fontSize:"3vh"}} xs={5}>
                       Günler 
                       <p><Badge>{'Önceki Seçim->'}</Badge>{suankiGunler.length===0 ? <Badge color="warning">SEÇİM YOK</Badge> : suankiGunler.map((item,index)=>(<Badge key={index} color="info" style={{marginRight:'2px'}}>{item}</Badge>))}</p>
                       </Label>
@@ -439,11 +564,21 @@ export default class Programlar extends Component {
                     </FormGroup>
                     
                     <FormGroup row>
+                      <Label style={{fontSize:"2vh"}} xs={5}>Tank Seviye</Label>
+                      <Col xs={4}>                   
+                        <Label style={{fontSize:'2vh'}}>Sirkülasyon Başlangıç(%)</Label><Input max={100} style={{ fontSize: "20px" }} name="sirkulasyonSeviyesi" type="number" value={sirkulasyonSeviyesi} required onChange={this.editHandleChange}/>
+                      </Col>
+                      <Col xs={3}>
+                        <Label style={{fontSize:'2vh'}}>Dolum (%)</Label><Input max={100} pattern="\d{4}" style={{ fontSize: "20px" }} name="dolmaSeviyesi" type="number" value={dolmaSeviyesi} required onChange={this.editHandleChange}/>
+                      </Col>                     
+                    </FormGroup>  
+
+                    <FormGroup row>
                       <Col xs={7}>
-                        <Button style={{width:'100%',fontSize:'32px',borderRadius:'24px'}} type="submit" color="danger"onClick={() => this.editModalClose()}>Sayfayı Kapat</Button>
+                        <Button style={{width:'100%',fontSize:'2.7vh',borderRadius:'24px'}} type="submit" color="danger"onClick={() => this.editModalClose()}>Sayfayı Kapat</Button>
                       </Col>
                       <Col xs={5}>
-                        <Button style={{width:'100%',fontSize:'32px',borderRadius:'24px'}} type="submit" color="success" onClick={() => this.editProgram()}>Güncelle</Button>
+                        <Button style={{width:'100%',fontSize:'2.7vh',borderRadius:'24px'}} type="submit" color="success" onClick={() => this.editProgram()}>Güncelle</Button>
                       </Col>
                     </FormGroup>                                            
                     </Form>
@@ -469,6 +604,7 @@ export default class Programlar extends Component {
       tekrar,
       phSet,
       ecSet,
+      sirkulasyonSeviyesi,dolmaSeviyesi
     } = this.state.cardInfo;
     
     return(
@@ -496,14 +632,14 @@ export default class Programlar extends Component {
                     <FormGroup row>
                       <Label
                         for="programAdi"
-                        style={{ fontSize: "24px" }}
+                        style={{ fontSize: "2vh" }}
                         xs={5}
                       >
                         Program Adı
                       </Label>
                       <Col xs={7}>
                         <Input
-                          style={{ fontSize: "20px" }}
+                          style={{ fontSize: "2vh" }}
                           name="programAdi"
                           value={programAdi}
                           id="exampleEmail"
@@ -516,14 +652,14 @@ export default class Programlar extends Component {
                     <FormGroup row>
                         <Label
                           for="dateTime"
-                          style={{ fontSize: "24px" }}
+                          style={{ fontSize: "2vh" }}
                           xs={5}
                         >
                           Başlama Zamanı
                         </Label>
                         <Col xs={7}>
                           <input
-                            style={{ fontSize: "20px" }}
+                            style={{ fontSize: "2vh" }}
                             type="time"
                             name="baslamaSaat"
                             value={baslamaSaat}
@@ -535,7 +671,7 @@ export default class Programlar extends Component {
                     <FormGroup row>
                       <Label
                         for="calismaSuresi"
-                        style={{ fontSize: "22px" }}
+                        style={{ fontSize: "2vh" }}
                         xs={5}
                       >
                         Çalışma Süresi (sa/dk/sn)
@@ -543,7 +679,10 @@ export default class Programlar extends Component {
                       <Col xs={2}>
                         <Input
                           type="number"
-                          style={{ fontSize: "20px" }}
+                          step={1}
+                          min={0}
+                          max={24}
+                          style={{ fontSize: "2vh" }}
                           name="calismaSuresiSaat"
                           value={calismaSuresiSaat}
                           id="exampleEmail"
@@ -555,7 +694,10 @@ export default class Programlar extends Component {
                       <Col xs={3}>
                         <Input
                           type="number"
-                          style={{ fontSize: "20px" }}
+                          step={1}
+                          min={0}
+                          max={60}
+                          style={{ fontSize: "2vh" }}
                           name="calismaSuresiDakika"
                           value={calismaSuresiDakika}
                           id="exampleEmail"
@@ -567,7 +709,10 @@ export default class Programlar extends Component {
                       <Col xs={2}>
                         <Input
                           type="number"
-                          style={{ fontSize: "20px" }}
+                          step={1}
+                          min={0}
+                          max={60}
+                          style={{ fontSize: "2vh" }}
                           name="calismaSuresiSaniye"
                           value={calismaSuresiSaniye}
                           id="exampleEmail"
@@ -580,7 +725,7 @@ export default class Programlar extends Component {
                     <FormGroup row>
                       <Label
                         for="beklemeSuresi"
-                        style={{ fontSize: "22px" }}
+                        style={{ fontSize: "2vh" }}
                         xs={5}
                       >
                         Bekleme Süresi (sa/dk/sn)
@@ -588,7 +733,10 @@ export default class Programlar extends Component {
                       <Col xs={2}>
                         <Input
                           type="number"
-                          style={{ fontSize: "20px" }}
+                          step={1}
+                          min={0}
+                          max={24}
+                          style={{ fontSize: "2vh" }}
                           name="beklemeSuresiSaat"
                           value={beklemeSuresiSaat}
                           id="exampleEmail"
@@ -600,7 +748,10 @@ export default class Programlar extends Component {
                       <Col xs={3}>
                         <Input
                           type="number"
-                          style={{ fontSize: "20px" }}
+                          step={1}
+                          min={0}
+                          max={60}
+                          style={{ fontSize: "2vh" }}
                           name="beklemeSuresiDakika"
                           value={beklemeSuresiDakika}
                           id="exampleEmail"
@@ -612,7 +763,10 @@ export default class Programlar extends Component {
                       <Col xs={2}>
                         <Input
                           type="number"
-                          style={{ fontSize: "20px" }}
+                          step={1}
+                          min={0}
+                          max={60}
+                          style={{ fontSize: "2vh" }}
                           name="beklemeSuresiSaniye"
                           value={beklemeSuresiSaniye}
                           id="exampleEmail"
@@ -623,13 +777,14 @@ export default class Programlar extends Component {
                       </Col>
                     </FormGroup>
                     <FormGroup row>
-                      <Label for="tekrar" style={{ fontSize: "24px" }} xs={5}>
+                      <Label for="tekrar" style={{ fontSize: "2vh" }} xs={5}>
                         Tekrar
                       </Label>
                       <Col xs={7}>
                         <Input
                           type="number"
-                          style={{ fontSize: "20px" }}
+                          min={0}
+                          style={{ fontSize: "2vh" }}
                           name="tekrar"
                           value={tekrar}
                           id="exampleEmail"
@@ -640,13 +795,16 @@ export default class Programlar extends Component {
                       </Col>
                     </FormGroup>
                     <FormGroup row>
-                      <Label for="tekrar" style={{ fontSize: "24px" }} xs={5}>
+                      <Label for="tekrar" style={{ fontSize: "2vh" }} xs={5}>
                         PH Set
                       </Label>
                       <Col xs={7}>
                         <Input
                           type="number"
-                          style={{ fontSize: "20px" }}
+                          step={0.01}
+                          min={0}
+                          max={14}
+                          style={{ fontSize: "2vh" }}
                           name="phSet"
                           value={phSet}
                           id="exampleEmail"
@@ -657,14 +815,17 @@ export default class Programlar extends Component {
                       </Col>
                     </FormGroup>
                     <FormGroup row>
-                      <Label for="tekrar" style={{ fontSize: "24px" }} xs={5}>
+                      <Label for="tekrar" style={{ fontSize: "2vh" }} xs={5}>
                         EC Set
                       </Label>
                       <Col xs={7}>
                         <Input
                           type="number"
-                          style={{ fontSize: "20px" }}
+                          style={{ fontSize: "2vh" }}
                           name="ecSet"
+                          step={0.01}
+                          min={0}
+                          max={10000}
                           value={ecSet}
                           id="exampleEmail"
                           placeholder="ec set değerini giriniz"
@@ -675,23 +836,23 @@ export default class Programlar extends Component {
                     </FormGroup>
                         
                     <FormGroup row>
-                      <Label for="valf" style={{ fontSize: "24px" }} xs={5}>
+                      <Label for="valf" style={{ fontSize: "2vh" }} xs={5}>
                           Valf
                         </Label>
                         <Col xs={7}>
                         <input name="valf1" type="checkbox" onClick={this.onChangeSwitch} disabled={true}/><Label className="checkboxLabel">Valf-1</Label>
                         <input name="valf2" type="checkbox" onClick={this.onChangeSwitch} checked={true}/><Label className="checkboxLabel">Valf-2</Label>
                         <input name="valf3" type="checkbox" onClick={this.onChangeSwitch} disabled={true}/><Label className="checkboxLabel">Valf-3</Label>
-                        <input name="valf4" type="checkbox" onClick={this.onChangeSwitch} disabled={true}/><Label className="checkboxLabel">Valf-4</Label>
+                        {/* <input name="valf4" type="checkbox" onClick={this.onChangeSwitch} disabled={true}/><Label className="checkboxLabel">Valf-4</Label>
                         <input name="valf5" type="checkbox" onClick={this.onChangeSwitch} disabled={true}/><Label className="checkboxLabel">Valf-5</Label>
                         <input name="valf6" type="checkbox" onClick={this.onChangeSwitch} disabled={true}/><Label className="checkboxLabel">Valf-6</Label>
                         <input name="valf7" type="checkbox" onClick={this.onChangeSwitch} disabled={true}/><Label className="checkboxLabel">Valf-7</Label>
-                        <input name="valf8" type="checkbox" onClick={this.onChangeSwitch} disabled={true}/><Label className="checkboxLabel">Valf-8</Label>
+                        <input name="valf8" type="checkbox" onClick={this.onChangeSwitch} disabled={true}/><Label className="checkboxLabel">Valf-8</Label> */}
                         </Col>
                     </FormGroup>
 
                     <FormGroup row>
-                      <Label for="günler" style={{fontSize:"24px"}} xs={5}>Günler</Label>
+                      <Label for="günler" style={{fontSize:"2vh"}} xs={5}>Günler</Label>
                       <Col xs={7}>                   
                         <input name="pazartesi" type="checkbox" onClick={this.onChangeSwitch}/><Label className="checkboxLabel">Pazartesi</Label>
                         <input name="sali" type="checkbox" onClick={this.onChangeSwitch}/><Label className="checkboxLabel">Salı</Label>
@@ -702,12 +863,23 @@ export default class Programlar extends Component {
                         <input name="pazar" type="checkbox" onClick={this.onChangeSwitch}/><Label className="checkboxLabel">Pazar</Label>
                       </Col>                     
                     </FormGroup>
+
+                    <FormGroup row>
+                      <Label style={{fontSize:"2vh"}} xs={5}>Tank Seviye</Label>
+                      <Col xs={4}>                   
+                        <Label style={{fontSize:'2vh'}}>Sirkülasyon Başlangıç(%)</Label><Input max={100} style={{ fontSize: "20px" }} name="sirkulasyonSeviyesi" type="number" value={sirkulasyonSeviyesi} required onChange={this.addHandleChange}/>
+                      </Col>
+                      <Col xs={3}>
+                        <Label style={{fontSize:'2vh'}}>Dolum (%)</Label><Input max={100} style={{ fontSize: "20px" }} name="dolmaSeviyesi" type="number" value={dolmaSeviyesi} required onChange={this.addHandleChange}/>
+                      </Col>                     
+                    </FormGroup>
+
                     <FormGroup row>
                       <Col xs={7}>
-                        <Button style={{width:'100%',fontSize:'32px',borderRadius:'24px'}} type="submit" color="danger"onClick={() => this.addModalClose()}>Sayfayı Kapat</Button>
+                        <Button style={{width:'100%',fontSize:'2.7vh',borderRadius:'12px'}} type="submit" color="danger" onClick={() => this.addModalClose()}>Sayfayı Kapat</Button>
                       </Col>
                       <Col xs={5}>
-                        <Button style={{width:'100%',fontSize:'32px',borderRadius:'24px'}} type="submit" color="success" onClick={() => this.saveButton()}>Kaydet</Button>
+                        <Button style={{width:'100%',fontSize:'2.7vh',borderRadius:'12px'}} type="submit" color="success" onClick={() => this.saveButton()}>Kaydet</Button>
                       </Col>
                     </FormGroup>
                     </Form>                                 
@@ -726,37 +898,39 @@ export default class Programlar extends Component {
         <Badge color="warning" style={{fontSize:'20px',marginTop:'5px',marginLeft:'2px'}}>{item.baslamaSaat}</Badge>
         <Badge color="info" style={{fontSize:'20px',marginTop:'5px',marginLeft:'2px'}}>{'PH: '+item.phSet}</Badge>
         <Badge color="info" style={{fontSize:'20px',marginTop:'5px',marginLeft:'2px'}}>{'EC: '+item.ecSet}</Badge>
-        <Badge color="info" style={{fontSize:'20px',marginTop:'5px',marginLeft:'2px'}}>{Number((item.calismaSuresiSaat*60+item.calismaSuresiDakika+item.calismaSuresiSaniye/60)*item.tekrar).toFixed(1)+' dk'}</Badge>
+        <hr style={{borderTop:'2px solid #bbb',borderRadius:'5px'}}></hr>
+        <h3 style={{fontSize:'20px',marginTop:'5px',marginLeft:'2px',width:'100%',color:'white'}}>{'Sulama Süresi:'+Number((item.calismaSuresiSaat*60+item.calismaSuresiDakika+item.calismaSuresiSaniye/60)).toFixed(0)+' dk'}</h3>
+        <hr style={{borderTop:'2px solid #bbb',borderRadius:'5px'}}></hr>
+        <h3 style={{fontSize:'20px',marginTop:'5px',marginLeft:'2px',width:'100%',color:'white'}}>{'Bekleme Süresi:'+Number((item.beklemeSuresiSaat*60+item.beklemeSuresiDakika+item.beklemeSuresiSaniye/60)).toFixed(0)+' dk'}</h3>
+        <hr style={{borderTop:'2px solid #bbb',borderRadius:'5px'}}></hr>
+        <h3 style={{fontSize:'20px',marginTop:'5px',marginLeft:'2px',width:'100%',color:'white'}}>{'Tekrar:'+item.tekrar}</h3>
+        <hr style={{borderTop:'2px solid #bbb',borderRadius:'5px'}}></hr>
+        <h3 style={{fontSize:'20px',marginTop:'5px',marginLeft:'2px',width:'100%',color:'white'}}>{'Toplam Sulama:'+Number((item.calismaSuresiSaat*60+item.calismaSuresiDakika+item.calismaSuresiSaniye/60)*item.tekrar).toFixed(1)+' dk'}</h3>
       </div> 
     )
   }
 
   cardsJSX = ()=>{
-    return(
+    return(                       
       <Container fluid={true}>
-          <Row>
-            <Col xs={12} lg={2} md={2}>
+          <Badge color="info" className="badges" style={{fontSize:'3vh',marginTop:'3px'}}>{'PH:'+this.props.sahaVerileri.ph}</Badge>
+          <Badge color="info" className="badges" style={{fontSize:'3vh',marginTop:'3px',marginLeft:'5px'}}>{'EC:'+this.props.sahaVerileri.ec}</Badge>                
+          <Badge color={this.props.sahaVerileri.tankSeviyesi >=90 ? "danger":"info"} className="badges" style={{fontSize:'3vh',marginTop:'3px',marginLeft:'5px'}}>{'Su Seviyesi: %'+this.props.sahaVerileri.tankSeviyesi}</Badge>
+          <Row style={{marginTop:'5px'}}>
+            <Col xs={6} lg={3} md={3}>
               <Button
-              color="warning"
-              size="lg"
+              color="success"
+              // size="lg"
               onClick={this.addProgramButton}
-              style={{ marginTop: "15px",width:'100%' }}
+              style={{ marginTop: "7px",marginBottom:"15px", width:'100%',fontSize:'2.5vh' }}
             >
-            <SettingOutlined style={{ fontSize: "24px" }} />
-             Yeni Program Ekle
+            + Program Ekle
             </Button>
             </Col>
 
-            <Col xs={12} lg={10} md={10}>
-            <Table dark className="calisanProgramTable">
-              <tbody>             
-                  <th>Çalışan Programlar</th>
-                    <td>
-                    {this.props.runningPrograms.length === 0 ? <Badge style={{fontSize:'22px',marginLeft:'5px',float:'right'}} color="warning" >Çalışan Program Yok</Badge> : this.props.runningPrograms.map((item,index)=>this.badgeJSX(item,index))}
-                    </td>
-              </tbody>
-            </Table>  
-            </Col>
+            {/* <Col xs={6} lg={9} md={9}>       
+            {this.props.runningPrograms.length === 0 ? <Badge style={{fontSize:'22px',margin:'7px'}} color="warning" >Çalışan Program Yok</Badge> : this.props.runningPrograms.map((item,index)=>this.badgeJSX(item,index))}             
+            </Col> */}
           </Row>
           <Row>
             {this.props.card.map((item,index) => (            
@@ -788,20 +962,20 @@ export default class Programlar extends Component {
                         key={index}
                         className="cardButtons"
                         color="success"
-                        onClick={() => this.props.activeButton(item)}
+                        onClick={() => this.activeButton(item)}
                       >
-                        Aktif
+                        <CheckOutlined className="iconClass"/>
                       </Button>
                       <Button
                         key={index}
                         className="cardButtons"
                         color="secondary"
-                        onClick={() => this.props.passiveButton(item)}
-                      >
-                        Pasif
+                        onClick={() => this.passiveButton(item)}
+                      >                       
+                        <CloseOutlined className="iconClass"/>
                       </Button>
                       <Button
-                        disabled={this.props.activeCards.find((itm)=>item.id === itm.programID) ? true : false}
+                        // disabled={this.props.activeCards.find((itm)=>item.id === itm.programID) ? true : false}
                         key={index}
                         className="cardButtons"
                         color="warning"
@@ -809,10 +983,10 @@ export default class Programlar extends Component {
                           this.editProgramButton(item);
                         }}
                       >
-                        Düzenle
+                        <FormOutlined className="iconClass"/>
                       </Button>
                       <Button
-                        disabled={this.props.activeCards.find((itm)=>item.id === itm.programID) ? true : false}
+                        // disabled={this.props.activeCards.find((itm)=>item.id === itm.programID) ? true : false}
                         key={index}
                         className="cardButtons"
                         color="danger"
@@ -820,7 +994,7 @@ export default class Programlar extends Component {
                           this.deleteProgramButton(item);
                         }}
                       >
-                        Sil
+                        <DeleteOutlined className="iconClass"/>
                       </Button>
                     </ButtonGroup>
                   </CardBody>

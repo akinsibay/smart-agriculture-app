@@ -2,13 +2,14 @@ import React, { Component } from "react";
 import Programlar from "./components/Programlar";
 import { Route, Switch } from "react-router-dom";
 import cogoToast from "cogo-toast";
-//import SahaIzleme from "./components/SahaIzleme";
 import CalismaEkrani from "./components/CalismaEkrani";
 import Ayarlar from "./components/Ayarlar";
 import Navi from "./components/Navi";
+import LogComponent from "./components/LogComponent";
+import IslemRaporu from "./components/IslemRaporu";
 import Servis from "./components/Servis";
 import Main from "./components/Main";
-import test from "./components/test"
+import rapor from "./components/Rapor"
 import serverUrl from './config/serverUrl'
 import axios from 'axios'
 import alertify from 'alertifyjs'
@@ -20,9 +21,16 @@ export default class App extends Component {
       ph: 0,
       ec: 0,
       tankSeviyesi: 0,
+      asitPompaStatus:0,
+      gubrePompaStatus:0,
+      anaSuValfi:false,
+      sulamaValfi:false,
+      sirkulasyonValfi:false,
+      sulamaPompasi:false
     },
     runningPrograms:[],
-    programKalanSure:0
+    programKalanSure:0,
+    programTekrar:[]
   };
 
   addData = (gelen) => {
@@ -62,6 +70,8 @@ export default class App extends Component {
           item.tekrar=gelen.tekrar
           item.phSet=gelen.phSet
           item.ecSet=gelen.ecSet
+          item.sirkulasyonSeviye=gelen.sirkulasyonSeviye
+          item.dolmaSeviye=gelen.dolmaSeviye
         }
         return item;
       })
@@ -117,10 +127,10 @@ export default class App extends Component {
         axios.post(url,item)
           .then(function(res){
             //that.setState({ activeCards:tempArray }); 
-            that.notification(item,' aktif edildi.','success')
+            that.notification(item,' programı aktif edildi.','success')
             setTimeout(() => {
               window.location.reload() 
-            }, 500); 
+            }, 2000); 
           })
           .catch(function(error){
             that.notification('',String(error),'error')
@@ -138,10 +148,10 @@ export default class App extends Component {
     let url = serverUrl + '/aktifProgramKaldir'
       axios.post(url,item)
       .then(function(res){
-        that.notification(item,' pasif edildi.','error')
+        that.notification(item,' programı pasif edildi.','error')
         setTimeout(() => {
           window.location.reload() 
-        }, 500);
+        }, 2000);
       })
       .catch(function(error){
         that.notification('',String(error),'error')
@@ -183,8 +193,9 @@ export default class App extends Component {
     
      setInterval(() => {
       this.anlikDegerleriOku()
-      this.checkRunningPrograms()            
-    }, 2000);  
+      this.checkRunningPrograms()
+      this.programTekrariOku()        
+    }, 5000);  
   }
 
   checkRunningPrograms=()=>{
@@ -206,33 +217,65 @@ export default class App extends Component {
     let tankSeviyesi = 0;
     let ph = 0;
     let ec = 0;
+    let asitPompaStatus = 0;
+    let gubrePompaStatus = 0;
+    let anaSuValfi = false
+    let sulamaValfi = false
+    let sirkulasyonValfi = false
+    let sulamaPompasi = false
     let aurl = serverUrl + '/anlikVeriCek'
     axios.get(aurl)
     .then(res=>{
+        console.log(res.data)
         ph = Number((res.data[0]/100).toFixed(2))  
-        ec = Number((res.data[1]/100).toFixed(1))
+        ec = Number(res.data[1])
         tankSeviyesi = Number(((res.data[2]*100)/4095).toFixed(1))
+        asitPompaStatus = Number(res.data[6])
+        gubrePompaStatus = Number(res.data[7])
+        anaSuValfi = res.data[8]
+        sulamaValfi = res.data[9]
+        sirkulasyonValfi = res.data[10]
+        sulamaPompasi = res.data[11]
         that.setState({sahaVerileri:{
           ...that.state.sahaVerileri,
-          tankSeviyesi,ph,ec
+          tankSeviyesi,ph,ec,asitPompaStatus,gubrePompaStatus,anaSuValfi,sulamaValfi,sirkulasyonValfi,sulamaPompasi
         }});
     })
     .catch(err=>{
-        that.alertifyNotification('Modbus bağlantı hatası')
+        //that.alertifyNotification('Modbus bağlantı hatası. Tekrar deneyin.')
     })
   }
-  
+
+  programTekrariOku=()=>{
+    let that = this;
+    let url = serverUrl + '/tekrarAdediCek'
+    axios.get(url)
+    .then(res=>{
+      console.log(res.data)
+      that.setState({programTekrar:res.data})
+    })
+    .catch(err=>console.log(err))
+  }
+
   notification=(item,message,type)=>{
     if(type==='success'){
       cogoToast.success(
         <div>
-          <h2>{item.programAdi} {message}</h2>
+          <h3>{item.programAdi} {message}</h3>
         </div>,
         { position: "top-center" }
       );
     }
     if(type==='error'){
       cogoToast.error(
+        <div>
+          <h3>{item.programAdi} {message}</h3>
+        </div>,
+        { position: "top-center" }
+      );
+    }
+    if(type==='info'){
+      cogoToast.info(
         <div>
           <h2>{item.programAdi} {message}</h2>
         </div>,
@@ -247,10 +290,11 @@ export default class App extends Component {
   }
 
   render() {
-    const { array, activeCards,sahaVerileri,runningPrograms,programKalanSure } = this.state;
+    const { array, activeCards,sahaVerileri,runningPrograms,programKalanSure,programTekrar } = this.state;
     return (
       <div>
         <Navi/>
+        <LogComponent alertify = {this.alertifyNotification}/>
         <Switch>
           <Route exact path="/calismaekrani">
             <CalismaEkrani
@@ -259,8 +303,9 @@ export default class App extends Component {
               runningPrograms={runningPrograms}
               programKalanSure ={programKalanSure} 
               sahaVerileri={sahaVerileri}
+              programTekrar={programTekrar} 
               passiveButton={this.passiveButton}
-              notification={this.notification}                        
+              notification={this.notification}                                    
             ></CalismaEkrani>
           </Route>
 
@@ -272,6 +317,7 @@ export default class App extends Component {
                 {...props}
                 card={array}
                 activeCards={activeCards}
+                sahaVerileri={sahaVerileri}
                 runningPrograms={runningPrograms}
                 activeButton={this.activeButton}
                 passiveButton={this.passiveButton}
@@ -283,27 +329,28 @@ export default class App extends Component {
             )}
           />
 
-          {/* <Route exact path="/sahaizleme">
-            <SahaIzleme sahaVerileri={sahaVerileri}/>
-          </Route> */}
+          <Route exact path="/ayarlar">
+            <Ayarlar notification={this.notification}/>
+          </Route>
 
           <Route exact path="/servis">
               <Servis 
                 activeCards={activeCards}
+                sahaVerileri={sahaVerileri}
                 runningPrograms={runningPrograms} 
-                cards={array} 
+                cards={array}
+                programTekrar={programTekrar} 
                 passiveButton={this.passiveButton}
                 notification = {this.notification}
                 />              
           </Route>
 
-          <Route exact path="/ayarlar" component={Ayarlar} />
-
           <Route exact path="/" component={Main} />
 
-          <Route exact path="/test" component={test} />
+          <Route exact path="/islemRaporu" component={IslemRaporu} />
+
+          <Route exact path="/rapor" component={rapor} />
         </Switch>
-        
       </div>
     );
   }
